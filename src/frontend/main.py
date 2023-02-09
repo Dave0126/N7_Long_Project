@@ -35,7 +35,7 @@ class MyApp(QWidget):
 
         map.add_child(child=n7Marker)
 
-        map.add_child(folium.GeoJson('../../data/tests/frontend/demo.js', name='geojson'))
+        map.add_child(folium.GeoJson('data/tests/frontend/demo.js', name='geojson'))
 
         # global
         # m = folium.Map()
