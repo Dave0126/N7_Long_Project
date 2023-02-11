@@ -54,17 +54,6 @@ make demo
 
 ### GIT Branch Conventions
 
-```
-master:	[] -------> []
-					|(merge)
-dev:	[] -> [] -> [] ------------------> []
-					|(merge)				|
-feat/1:	[] -> [] -> []						|
-											|(merge)
-feat/2:	[] -> [] -> [] -> [] -> [] ->[] -> [] -> ...
-...
-```
-
 > [GIT tutorial](https://www.w3schools.com/git/)
 
 We have 2 types of branches, <u>***Master***</u> and <u>***Develop***</u>.
