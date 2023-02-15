@@ -115,3 +115,12 @@ The master branch is the core branch for all development activities. The output 
 
 - `feat` branches only interact with the `dev` branch, <u>***NOT directly***</u> with the `master` branch
 
+
+
+
+
+## Demos
+
+1. 2023-02-15 Frontend-MainWindow by Guohao
+
+![screenshot1](demo/screenshot1.gif)
