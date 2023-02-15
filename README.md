@@ -119,8 +119,19 @@ The master branch is the core branch for all development activities. The output 
 
 
 
+## Notice
+
+- `2023-02-15`
+
+  When the frontend program calls `addPoint()` and `addAreas()` to create restricted areas with a graphical interface, it will generate temporary JSON files, which are saved in the `data/temp` folder. The above two methods will repeatedly call the `folium.plugins.Draw()` function, so for the second called function, two JSON files with the same content will be written repeatedly.
+
+
+
+
+
 ## Demos
 
-1. 2023-02-15 Frontend-MainWindow by Guohao
+1. `2023-02-15` Frontend-MainWindow by Guohao
 
 ![screenshot1](demos/screenshot1.gif)
+

@@ -7,3 +7,7 @@ show:
 
 demo:
 	$(PY3) src/frontend/callWindow.py
+
+clean:
+	rm data/temp/customAreas/*.js
+	rm data/temp/customLines/*.js
