@@ -6,4 +6,4 @@ show:
 	echo "- Project Direction: $(PROJECT_HOME)"
 
 demo:
-	$(PY3) src/frontend/main.py
+	$(PY3) src/frontend/callWindow.py
