@@ -123,4 +123,4 @@ The master branch is the core branch for all development activities. The output 
 
 1. 2023-02-15 Frontend-MainWindow by Guohao
 
-![screenshot1](demo/screenshot1.gif)
+![screenshot1](demos/screenshot1.gif)

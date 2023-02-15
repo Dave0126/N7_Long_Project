@@ -79,12 +79,12 @@ class MyApp(QWidget):
         map.add_child(child=n7Marker)
 
         # Create different areas from external json file in 'data/tests/frontend/'
-        map.add_child(folium.GeoJson('data/tests/frontend/demo.js', name='geojson'))
+        map.add_child(folium.GeoJson('../../data/tests/frontend/demo.js', name='geojson'))
 
 
         draw = folium.plugins.Draw(
             draw_options={
-                'polyline': False,
+                'polyline': True,
                 'rectangle': True,
                 'polygon': True,
                 'circle': False,

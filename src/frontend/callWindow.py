@@ -81,7 +81,7 @@ class Window(QMainWindow, window.Ui_MainWindow):
     def addElements(self):
         draw = folium.plugins.Draw(
             draw_options={
-                'polyline': False,
+                'polyline': True,
                 'rectangle': True,
                 'polygon': True,
                 'circle': False,
