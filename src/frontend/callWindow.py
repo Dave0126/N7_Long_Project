@@ -8,6 +8,8 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
 from PyQt5.QtWebEngineWidgets import *
 import io
 import numpy as np
+from recvData import RcvDataThread
+
 
 
 #导入designer工具生成的 window 模块
@@ -110,6 +112,10 @@ if __name__ == "__main__":
   app = QApplication(sys.argv)
   w = Window()
   w.show()
+  # Create and start the socket thread
+  recv_thread = RcvDataThread(w)
+  recv_thread.start()
+
   sys.exit(app.exec_())
 
 
