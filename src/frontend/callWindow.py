@@ -89,7 +89,7 @@ class Window(QMainWindow, window.Ui_MainWindow):
 
     def openFile(self):
         fileName1, filetype = QFileDialog.getOpenFileName(self, "Select a JSON file", "/",
-                                                                  "JSON File (*.js)")
+                                                                  "JSON File (*.json)")
 
         map.add_child(folium.GeoJson(fileName1, name='geojson'))
         data = io.BytesIO()
@@ -119,7 +119,7 @@ class Window(QMainWindow, window.Ui_MainWindow):
             def javaScriptAlert(self, securityOrigin, msg):
                 global areaCount
                 coords_dict = json.loads(msg)
-                dirPath = 'data/temp/customAreas/customArea%d.js'%areaCount
+                dirPath = 'data/temp/customAreas/customArea%d.json'%areaCount
                 areaCount += 1
                 customJsonFile = open(dirPath, 'w')
                 customJsonFile.write(msg)
@@ -156,7 +156,7 @@ class Window(QMainWindow, window.Ui_MainWindow):
 
                 global lineCount
                 coords_dict = json.loads(msg)
-                dirPath = 'data/temp/customLines/customLine%d.js' % lineCount
+                dirPath = 'data/temp/customLines/customLine%d.json' % lineCount
                 lineCount += 1
                 customJsonFile = open(dirPath, 'w')
                 customJsonFile.write(msg)

@@ -94,7 +94,7 @@ class MyApp(QWidget):
             if lat>43.7: break
 
         # Create different areas from external json file in 'data/tests/frontend/'
-        map.add_child(folium.GeoJson('../../data/tests/frontend/demo.js', name='geojson'))
+        map.add_child(folium.GeoJson('../../data/tests/frontend/demo.json', name='geojson'))
 
 
         draw = folium.plugins.Draw(
