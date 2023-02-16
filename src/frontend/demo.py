@@ -2,6 +2,8 @@ import json
 import sys
 import os
 import io
+import time
+
 import numpy as np
 import folium  # pip install folium
 from PyQt5 import QtWebEngineWidgets
@@ -77,6 +79,19 @@ class MyApp(QWidget):
                                                   color='blue'))
 
         map.add_child(child=n7Marker)
+
+        '''
+            Simulate real time recv from backend
+        '''
+        lat = 43.60427
+        lng = 1.45539
+        while True:
+            lat += 0.005
+            lng += 0.005
+            map.add_child(folium.Marker(location=[lat, lng]))
+
+            time.sleep(0.1)
+            if lat>43.7: break
 
         # Create different areas from external json file in 'data/tests/frontend/'
         map.add_child(folium.GeoJson('../../data/tests/frontend/demo.js', name='geojson'))

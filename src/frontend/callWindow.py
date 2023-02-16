@@ -1,5 +1,7 @@
 import json
 import sys
+import time
+
 import folium
 from folium import plugins
 from PyQt5 import QtCore, QtWebEngineWidgets
@@ -51,6 +53,9 @@ class Window(QMainWindow, window.Ui_MainWindow):
         TODO:
             To fix the issues.
         '''
+
+        # 1st simulation
+        self.actionSim_v1.triggered.connect(self.firstSim)
 
         # Minimap
         minimap = folium.plugins.MiniMap(tile_layer='cartodbpositron', zoom_level_offset=-3)
@@ -168,12 +173,29 @@ class Window(QMainWindow, window.Ui_MainWindow):
         self.webEngineView.setHtml(data.getvalue().decode())
 
 
+    def firstSim(self):
+        print("1111111111111")
+        # lat = 43.60427
+        # lng = 1.45539
+        # while True:
+        #     lat += 0.005
+        #     lng += 0.005
+        #     map.add_child(folium.Marker(location=[lat, lng]))
+        #     # To load map data
+        #     data = io.BytesIO()
+        #     map.save(data, close_file=False)
+        #     self.webEngineView.setHtml(data.getvalue().decode())
+        #
+        #     time.sleep(0.1)
+        #     if lat > 43.7: break
+
+
 if __name__ == "__main__":
   app = QApplication(sys.argv)
   w = Window()
   w.show()
   # Create and start the socket thread
-  recv_thread = RcvDataThread(w)
-  recv_thread.start()
+  # recv_thread = RcvDataThread(w)
+  # recv_thread.start()
 
   sys.exit(app.exec_())
