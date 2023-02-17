@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
 from PyQt5.QtWebEngineWidgets import *
 import io
 import numpy as np
-from recvData import RcvDataThread
+#from recvData import RcvDataThread
 
 
 
@@ -18,8 +18,9 @@ import window
 Global param.
 '''
 coordinate = (43.60427946618452, 1.4369164843056978)
+global map
 map = folium.Map(
-            zoom_start=15,
+            zoom_start=10,
             location=coordinate,
             tiles='cartodbpositronnolabels',
             control_scale="false"
@@ -168,7 +169,7 @@ class Window(QMainWindow, window.Ui_MainWindow):
         self.webEngineView.setHtml(data.getvalue().decode())
 
 
-if __name__ == "__main__":
+'''if __name__ == "__main__":
   app = QApplication(sys.argv)
   w = Window()
   w.show()
@@ -176,4 +177,4 @@ if __name__ == "__main__":
   recv_thread = RcvDataThread(w)
   recv_thread.start()
 
-  sys.exit(app.exec_())
+  sys.exit(app.exec_())'''
