@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'simulation1Widget.ui'
+# Form implementation generated from reading ui file 'src/frontend/UI/simulation1Widget.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.7
 #

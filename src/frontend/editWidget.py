@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'editWidget.ui'
+# Form implementation generated from reading ui file 'src/frontend/UI/editWidget.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.7
 #
