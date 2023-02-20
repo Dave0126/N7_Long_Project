@@ -6,7 +6,7 @@ show:
 	echo "- Project Direction: $(PROJECT_HOME)"
 
 demo:
-	$(PY3) src/frontend/callWindow.py
+	$(PY3) src/frontend/main.py
 
 clean:
 	rm -f data/temp/customAreas/*.json
