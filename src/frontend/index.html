@@ -45,14 +45,15 @@
 
                 // 获取qt中绑定的交互对象
                 window.pyjs = channel.objects.interact_obj
-
+                var marker = L.marker([43.35, 1.13]).addTo(map);
                 let last_data = ""
                 // js 绑定qt中的信号
                 pyjs.sig_send_to_js.connect(function (str) {
                     if (last_data != str) {
                         document.getElementById("output").innerHTML = str;
-                        let coord = str.split(",")
-                        L.marker([coord[0], coord[1]]).addTo(map);
+                        let coord = str.split(",");
+                        //L.marker([coord[0], coord[1]]).addTo(map);
+                        marker.setLatLng([coord[0], coord[1]]);
                     }
                     last_data = str
                 });

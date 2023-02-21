@@ -1,5 +1,6 @@
 import json
 import os
+import socket
 import sys
 
 from PyQt5 import QtGui
@@ -108,7 +109,10 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         super(Window, self).__init__(*args, **kwargs)
         self.setupUi(self)
         self.welcomeText()
-
+        #for receiving data from simulator : 
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.bind(('127.0.0.1', 12349))
+        self.socket.listen(1)  # listen for 1 incoming connection
         # Auto scroll of textBrowser in MainWindow
         self.textBrowser.setFont(QFont('Consolas'))
         self.textBrowser.moveCursor(QtGui.QTextCursor.End)
@@ -179,13 +183,19 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         record = self.sim1W.sim_coordTextBrowser.toPlainText()
         self.sim1W.sim_coordTextBrowser.setText(record + '\n' + '[' + coord + ']')
 
-    # def updateCoordData(self):
-    #     self.interact_obj.setCoordData(self.textBrowser.toPlainText())
+    def updateCoordData(self):
+        lat = 43.35
+        lng = 1.13
+        while lat<45 :
+            lat = lat + 0.05
+            lng = lng + 0.05
+            latlng = str(lat)+","+str(lng)
+            self.interact_obj.setCoordData(latlng)
 
-    # def updateCoordDataByTimer(self, milliSecond):
-    #     timer = QTimer(self)
-    #     timer.timeout.connect(self.updateCoordData)
-    #     timer.start(milliSecond)
+    def updateCoordDataByTimer(self, milliSecond):
+        timer = QTimer(self)
+        timer.timeout.connect(self.updateCoordData)
+        timer.start(milliSecond)
 
     def openFile(self):
         self.textBrowser.append(__file__ + '\t[INFO]: Try to Import JSON File...')
@@ -218,5 +228,5 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     mainWindow = Window()
     mainWindow.show()
-    # mainWindow.updateCoordDataByTimer(1000)
+    mainWindow.updateCoordDataByTimer(1000)
     sys.exit(app.exec_())
