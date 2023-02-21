@@ -68,9 +68,9 @@ class Ui_edit_Widget(object):
     def retranslateUi(self, edit_Widget):
         _translate = QtCore.QCoreApplication.translate
         edit_Widget.setWindowTitle(_translate("edit_Widget", "edit"))
-        self.areaClassComboBox.setItemText(0, _translate("edit_Widget", "Zone1"))
-        self.areaClassComboBox.setItemText(1, _translate("edit_Widget", "Zone2"))
-        self.areaClassComboBox.setItemText(2, _translate("edit_Widget", "Zone3"))
+        self.areaClassComboBox.setItemText(0, _translate("edit_Widget", "Zone 1 (red)"))
+        self.areaClassComboBox.setItemText(1, _translate("edit_Widget", "Zone 2 (orange)"))
+        self.areaClassComboBox.setItemText(2, _translate("edit_Widget", "Zone 3 (black)"))
         self.editAreasButton.setText(_translate("edit_Widget", "EditAreas"))
         self.editLineButton.setText(_translate("edit_Widget", "EditLine"))
         self.label.setText(_translate("edit_Widget", "Areas Info. (JSON)"))

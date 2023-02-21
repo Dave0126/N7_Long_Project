@@ -78,7 +78,7 @@
                         colorChioce = "#ff0000"
                     } else if (choice == 1) {
                         colorChioce = "#FF6600"
-                    } else colorChioce = "#0000FF"
+                    } else colorChioce = "#000000"
 
                     //添加绘制控件
                     var drawAreaControl = new L.Control.Draw({
@@ -140,7 +140,7 @@
                         draw: {
                             polyline: {
                                 shapeOptions: {
-                                    color: "#f357a1",
+                                    color: "#008001",
                                     weight: 8,
                                 },
                             },
@@ -236,12 +236,6 @@
     // MiniMap
     var miniMapUrl = new L.TileLayer(CartoDBPosition_Url, {minZoom: 0, maxZoom: 15});
     var miniMap = new L.Control.MiniMap(miniMapUrl, {toggleDisplay: true}).addTo(map);
-
-
-    // L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    //     maxZoom: 19,
-    //     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-    // }).addTo(map);
 
     // 设置比例尺
     var scale = L.control.scale({maxWidth: 200, metric: true, imperial: false}).addTo(map)

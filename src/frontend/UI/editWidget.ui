@@ -26,17 +26,17 @@
        </property>
        <item>
         <property name="text">
-         <string>Zone1</string>
+         <string>Zone 1 (red)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>Zone2</string>
+         <string>Zone 2 (orange)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>Zone3</string>
+         <string>Zone 3 (black)</string>
         </property>
        </item>
       </widget>
