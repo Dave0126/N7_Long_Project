@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8"/>
+    <title>QWebChannel测试</title>
+    <!--引入交互js-->
+    <script type="text/javascript" src="../../libs/qwebchannel.js"></script>
+
+    <!-- Leaflet-->
+    <link rel="stylesheet" href="../../libs/leaflet/leaflet.css">
+    <script src="../../libs/leaflet/leaflet.js"></script>
+
+    <!-- Leaflet Plugins: miniMap -->
+    <link rel="stylesheet" href="../../libs/minimap/Control.MiniMap.min.css"/>
+    <script src="../../libs/minimap/Control.MiniMap.min.js" type="text/javascript"></script>
+
+    <!-- Leaflet Plugins: Draw -->
+    <script src="../../libs/draw/leaflet.draw.js"></script>
+    <link rel="stylesheet" href="../../libs/draw/leaflet.draw.css"/>
+
+    <!-- liveUpdate-->
+    <script src="../../libs/liveupdate/leaflet-liveupdate.js"></script>
+    <link rel="stylesheet" href="../../libs/liveupdate/leaflet-liveupdate.css"/>
+
+    <style type="text/css">
+        html, body {
+            height: 99%;
+            width: 99.4%;
+            overflow: hidden;
+        }
+
+        #output {
+            width: auto;
+            height: 5%;
+        }
+
+        #map {
+            width: auto;
+            height: 95%;
+        }
+    </style>
+    <!--业务js-->
+    <script type="text/javascript">
+        window.onload = function () {
+            new QWebChannel(qt.webChannelTransport, function (channel) {
+
+                // 获取qt中绑定的交互对象
+                window.pyjs = channel.objects.interact_obj
+
+                let last_data = ""
+                // js 绑定qt中的信号
+                pyjs.sig_send_to_js.connect(function (str) {
+                    if (last_data != str) {
+                        document.getElementById("output").innerHTML = str;
+                        let coord = str.split(",")
+                        L.marker([coord[0], coord[1]]).addTo(map);
+                    }
+                    last_data = str
+                });
+
+                pyjs.sig_send_jsonfile_to_js.connect(function (str) {
+                    document.getElementById("output").innerHTML = str;
+                    if (str != null) {
+                        L.geoJSON(JSON.parse(str)).addTo(map)
+                    }
+                })
+
+                var currentControlToolbar = new L.Control.Draw()
+
+                pyjs.sig_send_editArea_to_js.connect(function (choice) {
+                    document.getElementById("output").innerHTML = choice;
+                    currentControlToolbar.remove()
+
+                    // draw 添加绘制图层
+                    var drawnItems = new L.FeatureGroup();
+                    map.addLayer(drawnItems);
+
+                    if (choice == 0) {
+                        colorChioce = "#ff0000"
+                    } else if (choice == 1) {
+                        colorChioce = "#FF6600"
+                    } else colorChioce = "#000000"
+
+                    //添加绘制控件
+                    var drawAreaControl = new L.Control.Draw({
+                        draw: {
+                            polyline: false,
+                            polygon: {
+                                shapeOptions: {
+                                    color: colorChioce
+                                }
+                            },
+                            rectangle: {
+                                shapeOptions: {
+                                    color: colorChioce
+                                }
+                            },
+                            circle: false,
+                            marker: false,
+                            circlemarker: false
+                        },
+                        edit: {
+                            //绘制图层
+                            featureGroup: drawnItems,
+                            edit: true,
+                            remove: true,
+                        }
+                    });
+                    //添加绘制控件
+                    map.addControl(drawAreaControl);
+                    //绘制事件
+                    map.on(L.Draw.Event.CREATED, function (e) {
+                        var type = e.layerType,
+                            layer = e.layer;
+                        if (type === 'marker') {
+                            layer.bindPopup('A popup!');
+                        }
+                        drawnItems.addLayer(layer);
+                        curentLayer = drawnItems;
+                    });
+                    // 修改事件
+                    map.on(L.Draw.Event.EDITED, function (e) {
+                        var layers = e.layers;
+                        var countOfEditedLayers = 0;
+                        layers.eachLayer(function (layer) {
+                            countOfEditedLayers++;
+                        });
+                        console.log("Edited " + countOfEditedLayers + " layers");
+                    });
+                    currentControlToolbar = drawAreaControl
+                })
+
+                pyjs.sig_send_editLine_to_js.connect(function (str) {
+                    document.getElementById("output").innerHTML = 'line';
+                    currentControlToolbar.remove()
+                    // draw 添加绘制图层
+                    var drawnLine = new L.FeatureGroup();
+                    map.addLayer(drawnLine);
+                    //添加绘制控件
+                    var drawLineControl = new L.Control.Draw({
+                        draw: {
+                            polyline: {
+                                shapeOptions: {
+                                    color: "#008001",
+                                    weight: 8,
+                                },
+                            },
+                            polygon: false,
+                            rectangle: false,
+                            circle: false,
+                            marker: false,
+                            circlemarker: false
+                        },
+                        edit: {
+                            //绘制图层
+                            featureGroup: drawnLine,
+                            edit: true,
+                            remove: true,
+                        }
+                    });
+                    //添加绘制控件
+                    map.addControl(drawLineControl);
+                    //绘制事件
+                    map.on(L.Draw.Event.CREATED, function (e) {
+                        var type = e.layerType,
+                            layer = e.layer;
+                        if (type === 'marker') {
+                            layer.bindPopup('A popup!');
+                        }
+                        drawnLine.addLayer(layer);
+                        curentLayer = drawnLine;
+                    });
+                    // 修改事件
+                    map.on(L.Draw.Event.EDITED, function (e) {
+                        var layers = e.layers;
+                        var countOfEditedLayers = 0;
+                        layers.eachLayer(function (layer) {
+                            countOfEditedLayers++;
+                        });
+                        console.log("Edited " + countOfEditedLayers + " layers");
+                    });
+                    currentControlToolbar = drawLineControl
+                })
+
+                // 按钮点击事件
+                document.getElementById("send").onclick = function () {
+                    var text_area = document.getElementById("output");
+                    if (!text_area.value) {
+                        return;
+                    }
+                    // js调用qt中的方法
+                    pyjs.receive_str_from_js(text_area.value)
+                    text_area.value = "";
+                }
+            });
+        }
+    </script>
+</head>
+
+<body>
+<div id="map"></div>
+<textarea id="output">web控件内容!</textarea>
+<!--<input type="submit" id="send" value="同步到Qt" onclick="javascript:click();"/>-->
+
+
+<script>
+    // 创建map，设置中心点
+    var map = L.map('map').setView([43.60427946618452, 1.4369164843056978], 15);
+
+    // map图层tile地址
+    var CartoDBPosition_Url = 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+    var OpenStreetMap_Url = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+    var EsriMapSat_url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+
+    // 设置可选的map图层
+    var baseMapLayers = {
+        "OpenStreetMap": L.tileLayer(OpenStreetMap_Url, {
+            maxZoom: 18
+        }).addTo(map),
+
+        "ESRI Satellite Map": L.tileLayer(EsriMapSat_url, {
+            maxZoom: 18,
+            attribution: 'Tiles &copy; Esri.'
+        }).addTo(map),
+
+        "CartoDB Positron": L.tileLayer(CartoDBPosition_Url, {
+            maxZoom: 18
+        }).addTo(map)
+    };
+
+    // 在页面上添加选择图层功能
+    var layControl = L.control.layers(baseMapLayers, {}, {
+        position: 'topright',
+        collapsed: true
+    }).addTo(map)
+
+    // MiniMap
+    var miniMapUrl = new L.TileLayer(CartoDBPosition_Url, {minZoom: 0, maxZoom: 15});
+    var miniMap = new L.Control.MiniMap(miniMapUrl, {toggleDisplay: true}).addTo(map);
+
+    // 设置比例尺
+    var scale = L.control.scale({maxWidth: 200, metric: true, imperial: false}).addTo(map)
+
+    var curentLayer = new L.FeatureGroup();
+
+    // 添加一个maker
+    // var marker = L.marker([43.60427, 1.43691]).addTo(map);
+    // marker.bindPopup("<b>Hello world!</b><br>I am a popup.")
+    // console.log(marker.toGeoJSON())
+
+    // function onMapClick(e) {
+    //     alert("You clicked the map at " + e.latlng);
+    // }
+    // map.on('click', onMapClick);
+
+    // 设置一个点击事件click，将latlng信息用popup的方式显示
+    // function onMapClick(e) {
+    //     L.popup()
+    //         .setLatLng(e.latlng)
+    //         .setContent("You clicked the map at " + e.latlng.toString())
+    //         .openOn(map);
+    // }
+    // map.on('click', onMapClick);
+
+
+    // libs/liveupdate/leaflet-liveupdate.js
+    // lat = 43.60427
+    // lng = 1.43691
+    // L.control.liveupdate({
+    //     update_map: function () {
+    //         L.marker([lat, lng]).addTo(map);
+    //         lat += 0.002;
+    //         lng += 0.002;
+    //     },
+    //     position: 'topleft'
+    // })
+    //     .addTo(map)
+    //     .startUpdating();
+
+    // Export Button
+    var showExport = '<a href="#" onclick="geojsonExport()" title="Export to GeoJSON File" type="button" class="btn btn-danger btn-sm text-light"><i class="fa fa-file-code-o" aria-hidden="true"/> Export</a>';
+
+    var showExportButton = new L.Control({position: "topright"});
+    showExportButton.onAdd = function (map) {
+        this._div = L.DomUtil.create('div');
+        this._div.innerHTML = showExport
+        return this._div;
+    };
+    showExportButton.addTo(map);
+
+
+    function geojsonExport() {
+        let nodata = '{"type":"FeatureCollection","features":[]}';
+        let jsonData = (JSON.stringify(curentLayer.toGeoJSON()));
+        console.log("drawnLayer: \n" + jsonData)
+        // 将json数据放入pyjs的channel中
+        pyjs.receive_str_from_js(jsonData)
+    }
+
+</script>
+</body>
+</html>
