@@ -75,6 +75,7 @@ class sim1_Widget(QWidget, simulation1Widget.Ui_simulation1Widget):
             mainWindow.textBrowser.append(__file__ + '\t[WARNING]: Cancel to saveCoordAsFiles')
 
 
+
 class TInteractObj(QObject):
     """
     一个槽函数供js调用(内部最终将js的调用转化为了信号),
@@ -135,11 +136,14 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         # self.actionAdd_elements.triggered.connect(lambda: self.interact_obj.sig_send_editArea_to_js.emit(str))
         self.actionSimulationv1.triggered.connect(lambda: self.showWidgets(self.actionSimulationv1, self.qls))
 
+        self.timer = QTimer(self)
         self.sim1W.coordPushButton.clicked.connect(self.addCoordByBtn)
+        self.sim1W.autoSimStartButton.clicked.connect(lambda : self.updateCoordDataByTimer(self.sim1W.setTimerSpinBox.value()))
+        self.sim1W.autoSimStopButton.clicked.connect(self.stopUpdateCoordData)
+        self.sim1W.autoSimPulseOrContinueButton.clicked.connect(self.pulseOrContinueUpdateCoordData)
 
         # Select a file
         self.actionImport_GeoJSON_File.triggered.connect(self.openFile)
-
 
     def showWidgets(self, button, qls):
         dic = {
@@ -179,13 +183,36 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         record = self.sim1W.sim_coordTextBrowser.toPlainText()
         self.sim1W.sim_coordTextBrowser.setText(record + '\n' + '[' + coord + ']')
 
-    # def updateCoordData(self):
-    #     self.interact_obj.setCoordData("43.60427946618452,1.4369164843056978")
-    #
-    # def updateCoordDataByTimer(self, milliSecond):
-    #     timer = QTimer(self)
-    #     timer.timeout.connect(self.updateCoordData)
-    #     timer.start(milliSecond)
+    def updateCoordData(self):
+        coord = "43.60427,1.43691"
+        self.interact_obj.setCoordData(coord)
+        record = self.sim1W.sim_coordTextBrowser.toPlainText()
+        self.sim1W.sim_coordTextBrowser.setText(record + '\n' + '[' + coord + ']')
+
+    def updateCoordDataByTimer(self, milliSecond):
+        if self.timer:      # 如果这个self.timer 为空时，就新建一个
+            self.timer = QTimer(self)
+        self.timer.timeout.connect(self.updateCoordData)
+        self.timer.start(milliSecond)
+        self.textBrowser.append(__file__ + '\t[INFO]: Start automatic sampling...')
+
+    def stopUpdateCoordData(self):
+        self.textBrowser.append(__file__ + '\t[INFO]: Stop automatic sampling...')
+        self.timer.stop()
+        self.timer.deleteLater()
+        self.sim1W.sim_coordTextBrowser.clear()
+        self.interact_obj.sig_send_to_js.emit('STOP')
+
+    def pulseOrContinueUpdateCoordData(self):
+        if self.timer.isActive():
+            self.timer.stop()
+            self.textBrowser.append(__file__ + '\t[INFO]: Pulse automatic sampling...')
+        else:
+            self.timer.start()
+            self.textBrowser.append(__file__ + '\t[INFO]: Continue automatic sampling...')
+
+
+
 
     def openFile(self):
         self.textBrowser.append(__file__ + '\t[INFO]: Try to Import JSON File...')
@@ -218,5 +245,4 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     mainWindow = Window()
     mainWindow.show()
-    # mainWindow.updateCoordDataByTimer(1000)
     sys.exit(app.exec_())
