@@ -6,48 +6,101 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>200</width>
-    <height>300</height>
+    <width>232</width>
+    <height>335</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>edit</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_2">
+  <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="bottomMargin">
+      <number>20</number>
+     </property>
      <item>
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>Areas Info. (JSON)</string>
+      <widget class="QComboBox" name="areaClassComboBox">
+       <property name="currentIndex">
+        <number>0</number>
        </property>
+       <item>
+        <property name="text">
+         <string>Zone1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Zone2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Zone3</string>
+        </property>
+       </item>
       </widget>
      </item>
      <item>
-      <widget class="QTextBrowser" name="editJsonTextBrowser"/>
-     </item>
-     <item>
-      <widget class="QPushButton" name="editCleanTextButton">
+      <widget class="QPushButton" name="editAreasButton">
        <property name="text">
-        <string>Clean</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="Line" name="line">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="editExportButton">
-       <property name="text">
-        <string>ExportToJSONFile</string>
+        <string>EditAreas</string>
        </property>
       </widget>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="Line" name="line_3">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="editLineButton">
+     <property name="text">
+      <string>EditLine</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="Line" name="line_2">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Areas Info. (JSON)</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTextBrowser" name="editJsonTextBrowser"/>
+   </item>
+   <item>
+    <widget class="QPushButton" name="editCleanTextButton">
+     <property name="text">
+      <string>Clean</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="editExportButton">
+     <property name="text">
+      <string>ExportToJSONFile</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

@@ -11,6 +11,8 @@ from PyQt5.QtWidgets import QMainWindow, QStackedLayout, QApplication, QWidget, 
 import mainWindow, mainWidget, editWidget, simulation1Widget
 
 
+# import src.backend.main
+
 class main_Widget(QWidget, mainWidget.Ui_mainWidget):
     def __init__(self, *args, **kwargs):
         super(main_Widget, self).__init__(*args, **kwargs)
@@ -23,12 +25,23 @@ class edit_Widget(QWidget, editWidget.Ui_edit_Widget):
         self.setupUi(self)
         self.editExportButton.clicked.connect(self.saveEditInfoAsFile)
         self.editCleanTextButton.clicked.connect(self.cleanEditJsonTextBroswer)
+        self.editAreasButton.clicked.connect(self.signalEditAreasToJs)
+        self.editLineButton.clicked.connect(self.signalEditLineToJs)
+
+    def signalEditAreasToJs(self):
+        chioce = self.areaClassComboBox.currentIndex()
+        mainWindow.textBrowser.append(__file__ + '\t[INFO]: Edit ZONE ' + str(chioce + 1) + ' areas in the Map ...')
+        mainWindow.interact_obj.sig_send_editArea_to_js.emit(chioce)
+
+    def signalEditLineToJs(self):
+        mainWindow.textBrowser.append(__file__ + '\t[INFO]: Edit line in the Map ...')
+        mainWindow.interact_obj.sig_send_editLine_to_js.emit('1')
 
     def cleanEditJsonTextBroswer(self):
         mainWindow.textBrowser.append(__file__ + '\t[INFO]: Clean data from Map (QWebEngineView)...')
         self.editJsonTextBrowser.clear()
 
-    def saveEditInfoAsFile(self,context):
+    def saveEditInfoAsFile(self, context):
         mainWindow.textBrowser.append(__file__ + '\t[INFO]: Try to saveEditInfoAsFile...')
         fileName, fileType = QFileDialog.getSaveFileName(self,
                                                          "Save as",
@@ -42,7 +55,6 @@ class edit_Widget(QWidget, editWidget.Ui_edit_Widget):
             mainWindow.textBrowser.append(__file__ + '\t[INFO]: Cancel to saveEditInfoAsFile')
 
 
-
 class sim1_Widget(QWidget, simulation1Widget.Ui_simulation1Widget):
     def __init__(self, *args, **kwargs):
         super(sim1_Widget, self).__init__(*args, **kwargs)
@@ -52,15 +64,15 @@ class sim1_Widget(QWidget, simulation1Widget.Ui_simulation1Widget):
     def saveCoordAsFiles(self):
         mainWindow.textBrowser.append(__file__ + '\t[INFO]: Try to saveCoordAsFiles...')
         fileName, fileType = QFileDialog.getSaveFileName(self,
-                                                             "Save as",
-                                                             os.getcwd(),  # saving path
-                                                             "All Files (*);;Text Files (*.txt)")
+                                                         "Save as",
+                                                         os.getcwd(),  # saving path
+                                                         "All Files (*);;Text Files (*.txt)")
         if fileName != "":
             with open(fileName, 'w') as f:
                 context = self.sim_coordTextBrowser.toPlainText()
                 f.write(context)
         else:
-            mainWindow.textBrowser.append(__file__ +'\t[INFO]: Cancel to saveCoordAsFiles')
+            mainWindow.textBrowser.append(__file__ + '\t[INFO]: Cancel to saveCoordAsFiles')
 
 
 class TInteractObj(QObject):
@@ -73,6 +85,8 @@ class TInteractObj(QObject):
     # 定义信号,该信号会在js中绑定一个js方法.
     sig_send_to_js = pyqtSignal(str)
     sig_send_jsonfile_to_js = pyqtSignal(str)
+    sig_send_editArea_to_js = pyqtSignal(int)
+    sig_send_editLine_to_js = pyqtSignal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -116,6 +130,7 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         self.qls.addWidget(self.sim1W)
 
         self.actionAdd_elements.triggered.connect(lambda: self.showWidgets(self.actionAdd_elements, self.qls))
+        # self.actionAdd_elements.triggered.connect(lambda: self.interact_obj.sig_send_editArea_to_js.emit(str))
         self.actionSimulationv1.triggered.connect(lambda: self.showWidgets(self.actionSimulationv1, self.qls))
 
         self.sim1W.coordPushButton.clicked.connect(self.addCoordByBtn)
@@ -123,6 +138,9 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         # Select a file
         self.actionImport_GeoJSON_File.triggered.connect(self.openFile)
 
+    def switchToEditArea(self):
+        self.showWidgets(self.actionAdd_elements, self.qls)
+        self.interact_obj.sig_send_editLine_to_js.emit('1')
 
     def showWidgets(self, button, qls):
         dic = {
@@ -172,7 +190,7 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
     def openFile(self):
         self.textBrowser.append(__file__ + '\t[INFO]: Try to Import JSON File...')
         fileName, filetype = QFileDialog.getOpenFileName(self, "Select a JSON file", "/",
-                                                          "JSON File (*.json)")
+                                                         "JSON File (*.json)")
         if fileName != "":
             with open(fileName, 'r') as file:
                 content = file.read()  # 读取文件内容
@@ -180,21 +198,20 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
                 # self.textBrowser.append(content)
                 self.interact_obj.sig_send_jsonfile_to_js.emit(content)
         else:
-            self.textBrowser.append(__file__ +'\t[INFO]: Cancel to Import JSON File')
+            self.textBrowser.append(__file__ + '\t[INFO]: Cancel to Import JSON File')
 
     def welcomeText(self):
-        logoText="  $$$$$$$\                                                 $$$$$$\  $$\                         $$\            $$\     $$\                     \n" \
-                 "  $$  __$$\                                               $$  __$$\ \__|                        $$ |           $$ |    \__|                    \n" \
-                 "  $$ |  $$ | $$$$$$\   $$$$$$\  $$$$$$$\   $$$$$$\        $$ /  \__|$$\ $$$$$$\$$$$\  $$\   $$\ $$ | $$$$$$\ $$$$$$\   $$\  $$$$$$\  $$$$$$$\  \n" \
-                 "  $$ |  $$ |$$  __$$\ $$  __$$\ $$  __$$\ $$  __$$\       \$$$$$$\  $$ |$$  _$$  _$$\ $$ |  $$ |$$ | \____$$ \_$$  _|  $$ |$$  __$$\ $$  __$$\ \n" \
-                 "  $$ |  $$ |$$ |  \__|$$ /  $$ |$$ |  $$ |$$$$$$$$ |       \____$$\ $$ |$$ / $$ / $$ |$$ |  $$ |$$ | $$$$$$$ | $$ |    $$ |$$ /  $$ |$$ |  $$ |\n" \
-                 "  $$ |  $$ |$$ |      $$ |  $$ |$$ |  $$ |$$   ____|      $$\   $$ |$$ |$$ | $$ | $$ |$$ |  $$ |$$ |$$  __$$ | $$ |$$\ $$ |$$ |  $$ |$$ |  $$ |\n" \
-                 "  $$$$$$$  |$$ |      \$$$$$$  |$$ |  $$ |\$$$$$$$\       \$$$$$$  |$$ |$$ | $$ | $$ |\$$$$$$  |$$ |\$$$$$$$ | \$$$$  |$$ |\$$$$$$  |$$ |  $$ |\n" \
-                 "  \_______/ \__|       \______/ \__|  \__| \_______|       \______/ \__|\__| \__| \__| \______/ \__| \_______|  \____/ \__| \______/ \__|  \__|\n" \
-                 "\n" \
-                 "                                                                                                                                Version 1.0    \n"
+        logoText = "  $$$$$$$\                                                 $$$$$$\  $$\                         $$\            $$\     $$\                     \n" \
+                   "  $$  __$$\                                               $$  __$$\ \__|                        $$ |           $$ |    \__|                    \n" \
+                   "  $$ |  $$ | $$$$$$\   $$$$$$\  $$$$$$$\   $$$$$$\        $$ /  \__|$$\ $$$$$$\$$$$\  $$\   $$\ $$ | $$$$$$\ $$$$$$\   $$\  $$$$$$\  $$$$$$$\  \n" \
+                   "  $$ |  $$ |$$  __$$\ $$  __$$\ $$  __$$\ $$  __$$\       \$$$$$$\  $$ |$$  _$$  _$$\ $$ |  $$ |$$ | \____$$ \_$$  _|  $$ |$$  __$$\ $$  __$$\ \n" \
+                   "  $$ |  $$ |$$ |  \__|$$ /  $$ |$$ |  $$ |$$$$$$$$ |       \____$$\ $$ |$$ / $$ / $$ |$$ |  $$ |$$ | $$$$$$$ | $$ |    $$ |$$ /  $$ |$$ |  $$ |\n" \
+                   "  $$ |  $$ |$$ |      $$ |  $$ |$$ |  $$ |$$   ____|      $$\   $$ |$$ |$$ | $$ | $$ |$$ |  $$ |$$ |$$  __$$ | $$ |$$\ $$ |$$ |  $$ |$$ |  $$ |\n" \
+                   "  $$$$$$$  |$$ |      \$$$$$$  |$$ |  $$ |\$$$$$$$\       \$$$$$$  |$$ |$$ | $$ | $$ |\$$$$$$  |$$ |\$$$$$$$ | \$$$$  |$$ |\$$$$$$  |$$ |  $$ |\n" \
+                   "  \_______/ \__|       \______/ \__|  \__| \_______|       \______/ \__|\__| \__| \__| \______/ \__| \_______|  \____/ \__| \______/ \__|  \__|\n" \
+                   "\n" \
+                   "                                                                                                                                Version 1.0    \n"
         self.textBrowser.append(logoText)
-
 
 
 if __name__ == "__main__":
