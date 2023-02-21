@@ -40,6 +40,14 @@
     </style>
     <!--业务js-->
     <script type="text/javascript">
+
+        var droneIcon = L.icon({
+            iconUrl: '../../libs/leaflet/images/icon_drone.png',
+            iconSize: [30, 30], // size of the icon
+            iconAnchor: [15, 15], // point of the icon which will correspond to marker's location
+            popupAnchor: [0, -10] // point from which the popup should open relative to the iconAnchor
+        })
+
         window.onload = function () {
             new QWebChannel(qt.webChannelTransport, function (channel) {
 
@@ -49,13 +57,22 @@
                 let last_data = ""
                 // js 绑定qt中的信号
                 pyjs.sig_send_to_js.connect(function (str) {
-                    if (last_data != str) {
-                        document.getElementById("output").innerHTML = str;
-                        let coord = str.split(",");
-                        //L.marker([coord[0], coord[1]]).addTo(map);
+                    var coordSimLayerGroup = L.layerGroup().addTo(map);
+                    if (str != 'STOP'){
+                        if (last_data != str) {
+                            document.getElementById("output").innerHTML = str;
+                            let coord = str.split(",");
+                            let coordMarker = //L.marker([coord[0], coord[1]], {icon: droneIcon}).bindPopup(str).openPopup();
+                            coordSimLayerGroup.addLayer(coordMarker);
+                            var overlay = {'coordSimMarkers': coordSimLayerGroup};
+                            L.control.layers(null, overlay).addTo(map);
+                        }
+                        last_data = str
+                    } else {
+                        // TODO 应该清除layer上的标记
+                        L.layerGroup().removeFrom(map)
                         marker.setLatLng([coord[0], coord[1]]);
                     }
-                    last_data = str
                 });
 
                 pyjs.sig_send_jsonfile_to_js.connect(function (str) {
@@ -79,7 +96,8 @@
                         colorChioce = "#ff0000"
                     } else if (choice == 1) {
                         colorChioce = "#FF6600"
-                    } else colorChioce = "#000000"
+                    } else
+                        colorChioce = "#000000"
 
                     //添加绘制控件
                     var drawAreaControl = new L.Control.Draw({
@@ -241,6 +259,11 @@
     // 设置比例尺
     var scale = L.control.scale({maxWidth: 200, metric: true, imperial: false}).addTo(map)
 
+    // TODO 尝试在改变Zone的时候任然可以修改和导出之前的同Zone中的坐标
+    // var editAreaZone1Layer = new L.FeatureGroup();
+    // var editAreaZone2Layer = new L.FeatureGroup();
+    // var editAreaZone3Layer = new L.FeatureGroup();
+    // var editLineLayer = new L.FeatureGroup();
     var curentLayer = new L.FeatureGroup();
 
     // 添加一个maker

@@ -66,6 +66,7 @@ class Ui_MainWindow(object):
         self.actionAdd_elements = QtWidgets.QAction(MainWindow)
         self.actionAdd_elements.setObjectName("actionAdd_elements")
         self.menuFile.addAction(self.actionImport_GeoJSON_File)
+        self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionExit)
         self.menuEdit.addAction(self.actionAdd_elements)
         self.menuSimulation.addAction(self.actionSimulationv1)
@@ -74,6 +75,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuSimulation.menuAction())
 
         self.retranslateUi(MainWindow)
+        self.actionExit.triggered.connect(MainWindow.close) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):

@@ -53,7 +53,7 @@ class edit_Widget(QWidget, editWidget.Ui_edit_Widget):
                 context = self.editJsonTextBrowser.toPlainText()
                 f.write(context)
         else:
-            mainWindow.textBrowser.append(__file__ + '\t[INFO]: Cancel to saveEditInfoAsFile')
+            mainWindow.textBrowser.append(__file__ + '\t[WARNING]: Cancel to saveEditInfoAsFile')
 
 
 class sim1_Widget(QWidget, simulation1Widget.Ui_simulation1Widget):
@@ -73,7 +73,8 @@ class sim1_Widget(QWidget, simulation1Widget.Ui_simulation1Widget):
                 context = self.sim_coordTextBrowser.toPlainText()
                 f.write(context)
         else:
-            mainWindow.textBrowser.append(__file__ + '\t[INFO]: Cancel to saveCoordAsFiles')
+            mainWindow.textBrowser.append(__file__ + '\t[WARNING]: Cancel to saveCoordAsFiles')
+
 
 
 class TInteractObj(QObject):
@@ -112,14 +113,16 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         #for receiving data from simulator : 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind(('127.0.0.1', 12349))
-        self.socket.listen(1)  # listen for 1 incoming connection
+        self.socket.listen(1)  # listen for 1 incoming connection        self.textBrowser.append(__file__ + '\t[INFO]: Initializing the main window ...')
+
         # Auto scroll of textBrowser in MainWindow
-        self.textBrowser.setFont(QFont('Consolas'))
+        self.textBrowser.setFont(QFont('Consolas', 13))
         self.textBrowser.moveCursor(QtGui.QTextCursor.End)
 
         # Load Javascript of map and initialisation
         self.index = (os.path.split(os.path.realpath(__file__))[0]) + "/index.html"
         self.webEngineView.load(QUrl.fromLocalFile(self.index))
+        self.textBrowser.append(__file__ + '\t[INFO]: Initializing the interact object ...')
         self.init_channel()
 
         # Load and config different widgets pages
@@ -137,14 +140,14 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         # self.actionAdd_elements.triggered.connect(lambda: self.interact_obj.sig_send_editArea_to_js.emit(str))
         self.actionSimulationv1.triggered.connect(lambda: self.showWidgets(self.actionSimulationv1, self.qls))
 
+        self.timer = QTimer(self)
         self.sim1W.coordPushButton.clicked.connect(self.addCoordByBtn)
+        self.sim1W.autoSimStartButton.clicked.connect(lambda : self.updateCoordDataByTimer(self.sim1W.setTimerSpinBox.value()))
+        self.sim1W.autoSimStopButton.clicked.connect(self.stopUpdateCoordData)
+        self.sim1W.autoSimPulseOrContinueButton.clicked.connect(self.pulseOrContinueUpdateCoordData)
 
         # Select a file
         self.actionImport_GeoJSON_File.triggered.connect(self.openFile)
-
-    def switchToEditArea(self):
-        self.showWidgets(self.actionAdd_elements, self.qls)
-        self.interact_obj.sig_send_editLine_to_js.emit('1')
 
     def showWidgets(self, button, qls):
         dic = {
@@ -153,6 +156,7 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         }
         index = dic[button.text()]
         qls.setCurrentIndex(index)
+        self.textBrowser.append(__file__ + '\t[INFO]: Initializing the ' + str(qls.currentWidget()) + '...')
 
     def init_channel(self):
         """
@@ -184,18 +188,39 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         self.sim1W.sim_coordTextBrowser.setText(record + '\n' + '[' + coord + ']')
 
     def updateCoordData(self):
-        lat = 43.35
-        lng = 1.13
-        while lat<45 :
-            lat = lat + 0.05
-            lng = lng + 0.05
-            latlng = str(lat)+","+str(lng)
-            self.interact_obj.setCoordData(latlng)
+        coord = "43.60427,1.43691"
+        self.interact_obj.setCoordData(coord)
+        record = self.sim1W.sim_coordTextBrowser.toPlainText()
+        self.sim1W.sim_coordTextBrowser.setText(record + '\n' + '[' + coord + ']')
 
     def updateCoordDataByTimer(self, milliSecond):
-        timer = QTimer(self)
-        timer.timeout.connect(self.updateCoordData)
-        timer.start(milliSecond)
+        if self.timer:      # 如果这个self.timer 为空时，就新建一个
+            self.timer = QTimer(self)
+        self.timer.timeout.connect(self.updateCoordData)
+        self.timer.start(milliSecond)
+        self.textBrowser.append(__file__ + '\t[INFO]: Start automatic sampling...')
+
+    def stopUpdateCoordData(self):
+        self.textBrowser.append(__file__ + '\t[INFO]: Stop automatic sampling...')
+        self.timer.stop()
+        self.timer.deleteLater()
+        self.sim1W.sim_coordTextBrowser.clear()
+        self.interact_obj.sig_send_to_js.emit('STOP')
+
+    def pulseOrContinueUpdateCoordData(self):
+        if self.timer.isActive():
+            self.timer.stop()
+            self.textBrowser.append(__file__ + '\t[INFO]: Pulse automatic sampling...')
+        else:
+            self.timer.start()
+            self.textBrowser.append(__file__ + '\t[INFO]: Continue automatic sampling...')
+
+
+
+    # def updateCoordDataByTimer(self, milliSecond):
+    #     timer = QTimer(self)
+    #     timer.timeout.connect(self.updateCoordData)
+    #     timer.start(milliSecond)
 
     def openFile(self):
         self.textBrowser.append(__file__ + '\t[INFO]: Try to Import JSON File...')
@@ -208,7 +233,7 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
                 # self.textBrowser.append(content)
                 self.interact_obj.sig_send_jsonfile_to_js.emit(content)
         else:
-            self.textBrowser.append(__file__ + '\t[INFO]: Cancel to Import JSON File')
+            self.textBrowser.append(__file__ + '\t[WARNING]: Cancel to Import JSON File')
 
     def welcomeText(self):
         logoText = "  $$$$$$$\                                                 $$$$$$\  $$\                         $$\            $$\     $$\                     \n" \
@@ -228,5 +253,5 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     mainWindow = Window()
     mainWindow.show()
-    mainWindow.updateCoordDataByTimer(1000)
+    # mainWindow.updateCoordDataByTimer(1000)
     sys.exit(app.exec_())
