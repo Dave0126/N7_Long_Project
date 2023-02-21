@@ -52,7 +52,7 @@ class edit_Widget(QWidget, editWidget.Ui_edit_Widget):
                 context = self.editJsonTextBrowser.toPlainText()
                 f.write(context)
         else:
-            mainWindow.textBrowser.append(__file__ + '\t[INFO]: Cancel to saveEditInfoAsFile')
+            mainWindow.textBrowser.append(__file__ + '\t[WARNING]: Cancel to saveEditInfoAsFile')
 
 
 class sim1_Widget(QWidget, simulation1Widget.Ui_simulation1Widget):
@@ -72,7 +72,7 @@ class sim1_Widget(QWidget, simulation1Widget.Ui_simulation1Widget):
                 context = self.sim_coordTextBrowser.toPlainText()
                 f.write(context)
         else:
-            mainWindow.textBrowser.append(__file__ + '\t[INFO]: Cancel to saveCoordAsFiles')
+            mainWindow.textBrowser.append(__file__ + '\t[WARNING]: Cancel to saveCoordAsFiles')
 
 
 class TInteractObj(QObject):
@@ -108,14 +108,16 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         super(Window, self).__init__(*args, **kwargs)
         self.setupUi(self)
         self.welcomeText()
+        self.textBrowser.append(__file__ + '\t[INFO]: Initializing the main window ...')
 
         # Auto scroll of textBrowser in MainWindow
-        self.textBrowser.setFont(QFont('Consolas'))
+        self.textBrowser.setFont(QFont('Consolas', 13))
         self.textBrowser.moveCursor(QtGui.QTextCursor.End)
 
         # Load Javascript of map and initialisation
         self.index = (os.path.split(os.path.realpath(__file__))[0]) + "/index.html"
         self.webEngineView.load(QUrl.fromLocalFile(self.index))
+        self.textBrowser.append(__file__ + '\t[INFO]: Initializing the interact object ...')
         self.init_channel()
 
         # Load and config different widgets pages
@@ -138,9 +140,6 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         # Select a file
         self.actionImport_GeoJSON_File.triggered.connect(self.openFile)
 
-    def switchToEditArea(self):
-        self.showWidgets(self.actionAdd_elements, self.qls)
-        self.interact_obj.sig_send_editLine_to_js.emit('1')
 
     def showWidgets(self, button, qls):
         dic = {
@@ -149,6 +148,7 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         }
         index = dic[button.text()]
         qls.setCurrentIndex(index)
+        self.textBrowser.append(__file__ + '\t[INFO]: Initializing the ' + str(qls.currentWidget()) + '...')
 
     def init_channel(self):
         """
@@ -180,8 +180,8 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         self.sim1W.sim_coordTextBrowser.setText(record + '\n' + '[' + coord + ']')
 
     # def updateCoordData(self):
-    #     self.interact_obj.setCoordData(self.textBrowser.toPlainText())
-
+    #     self.interact_obj.setCoordData("43.60427946618452,1.4369164843056978")
+    #
     # def updateCoordDataByTimer(self, milliSecond):
     #     timer = QTimer(self)
     #     timer.timeout.connect(self.updateCoordData)
@@ -198,7 +198,7 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
                 # self.textBrowser.append(content)
                 self.interact_obj.sig_send_jsonfile_to_js.emit(content)
         else:
-            self.textBrowser.append(__file__ + '\t[INFO]: Cancel to Import JSON File')
+            self.textBrowser.append(__file__ + '\t[WARNING]: Cancel to Import JSON File')
 
     def welcomeText(self):
         logoText = "  $$$$$$$\                                                 $$$$$$\  $$\                         $$\            $$\     $$\                     \n" \
