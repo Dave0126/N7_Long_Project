@@ -24,13 +24,10 @@ class RcvDataThread(threading.Thread):
                 if not data:
                     break
                 coord = data.decode().split(',')
-                drone_position = folium.Marker(location=[coord[0], coord[1]],
-                                 popup='Drone',
-                                 icon=folium.Icon(icon='info-sign',
-                                                  color='blue'))
-                callWindow.map.add_child(child=drone_position)
                 print(coord)
                 lat, lon = float(coord[0]), float(coord[1])
+                #Todo : display coord (realtime data) on map 
                 #self.map_widget.coords.append((lat, lon))
                 #self.map_widget.update()
+
 

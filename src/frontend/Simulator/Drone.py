@@ -13,12 +13,12 @@ class Drone:
         self.file_name = 'FP_'+self.droneID+'_'+self.flightDatetime+'.json' #Compose the file name based on the extracted informations
         self.realTimeFile = os.getcwd()+'/data/temp/realTimeData/realTimeCoordinates.json'
 
-    def start_psition(self, latitude, longitude, altitude) :
+    def start_position(self, latitude, longitude, altitude) :
         self.latitude = latitude
         self.longitude = longitude
         self.altitude = altitude
         
-    def createRealTimeDataFile(self) : 
+    def create_real_time_data_file(self) : 
         data = {
             "type": "Feature",
             "properties": {},
