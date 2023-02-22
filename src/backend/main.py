@@ -3,6 +3,7 @@ import random
 import math
 
 from classes.Drone import Drone
+from classes.Zone import *
 
 drone = Drone()
 
@@ -10,6 +11,10 @@ drone = Drone()
 # So we need to loop over the file (path) and call the move_to function for every end point
 # of every single section i.e. update the end_latitude/longitude/altitude parameters
 
+file = "data/tests/frontend/demo.json"
+initial = read_json(file)
+
+zones = []
 
 # Extract the informations of the drone
 droneID = 'D13' #This should be the reference of the drone 
@@ -41,3 +46,16 @@ for c in coordinates:
   
 #print(coordinates)
 #drone.move_to(end_latitude, end_longitude, end_altitude)
+
+while(True):
+   current = read_json(file)
+   if initial != current :
+     for i in current:
+       if i not in initial :
+         new_zone = Zone()
+         new_zone.set_data_from_file(file, current.index(i))
+         zones.append(new_zone)
+     for j in initial :
+       if j not in current:
+         zones.remove(j)
+   initial = current
