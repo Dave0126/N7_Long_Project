@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import QMainWindow, QStackedLayout, QApplication, QWidget, 
 import mainWindow, mainWidget, editWidget, simulation1Widget
 
 
-# import src.backend.main
+import src.backend.classes.Drone
 
 class main_Widget(QWidget, mainWidget.Ui_mainWidget):
     def __init__(self, *args, **kwargs):
@@ -41,11 +41,13 @@ class edit_Widget(QWidget, editWidget.Ui_edit_Widget):
         mainWindow.textBrowser.append(__file__ + '\t[INFO]: Clean data from Map (QWebEngineView)...')
         self.editJsonTextBrowser.clear()
 
-    def saveEditInfoAsFile(self, context):
+    def saveEditInfoAsFile(self):
         mainWindow.textBrowser.append(__file__ + '\t[INFO]: Try to saveEditInfoAsFile...')
+        droneId = self.droneIdText.toPlainText()
+        flightTime = self.flightTimeText.toPlainText()
         fileName, fileType = QFileDialog.getSaveFileName(self,
                                                          "Save as",
-                                                         os.getcwd(),  # saving path
+                                                         'FP_'+droneId+'_'+flightTime,
                                                          "All Files (*);;JSON Files (*.json)")
         if fileName != "":
             with open(fileName, 'w') as f:
@@ -136,7 +138,7 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         # self.actionAdd_elements.triggered.connect(lambda: self.interact_obj.sig_send_editArea_to_js.emit(str))
         self.actionSimulationv1.triggered.connect(lambda: self.showWidgets(self.actionSimulationv1, self.qls))
 
-        self.timer = QTimer(self)
+        # self.timer = QTimer(self)
         self.sim1W.coordPushButton.clicked.connect(self.addCoordByBtn)
         self.sim1W.autoSimStartButton.clicked.connect(lambda : self.updateCoordDataByTimer(self.sim1W.setTimerSpinBox.value()))
         self.sim1W.autoSimStopButton.clicked.connect(self.stopUpdateCoordData)
@@ -190,8 +192,7 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         self.sim1W.sim_coordTextBrowser.setText(record + '\n' + '[' + coord + ']')
 
     def updateCoordDataByTimer(self, milliSecond):
-        if self.timer:      # 如果这个self.timer 为空时，就新建一个
-            self.timer = QTimer(self)
+        self.timer = QTimer(self)
         self.timer.timeout.connect(self.updateCoordData)
         self.timer.start(milliSecond)
         self.textBrowser.append(__file__ + '\t[INFO]: Start automatic sampling...')
@@ -210,9 +211,6 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         else:
             self.timer.start()
             self.textBrowser.append(__file__ + '\t[INFO]: Continue automatic sampling...')
-
-
-
 
     def openFile(self):
         self.textBrowser.append(__file__ + '\t[INFO]: Try to Import JSON File...')
