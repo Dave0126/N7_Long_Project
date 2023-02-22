@@ -62,7 +62,7 @@
                         if (last_data != str) {
                             document.getElementById("output").innerHTML = str;
                             let coord = str.split(",");
-                            let coordMarker = //L.marker([coord[0], coord[1]], {icon: droneIcon}).bindPopup(str).openPopup();
+                            let coordMarker = L.marker([coord[0], coord[1]], {icon: droneIcon}).bindPopup(str).openPopup();
                             coordSimLayerGroup.addLayer(coordMarker);
                             var overlay = {'coordSimMarkers': coordSimLayerGroup};
                             L.control.layers(null, overlay).addTo(map);
@@ -71,7 +71,6 @@
                     } else {
                         // TODO 应该清除layer上的标记
                         L.layerGroup().removeFrom(map)
-                        marker.setLatLng([coord[0], coord[1]]);
                     }
                 });
 
