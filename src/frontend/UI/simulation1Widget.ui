@@ -114,6 +114,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="importDroneFlightPlanButton">
+       <property name="text">
+        <string>Import a drone's flight plan</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <layout class="QHBoxLayout" name="horizontalLayout" stretch="2,1">
        <item>
         <widget class="QSpinBox" name="setTimerSpinBox">

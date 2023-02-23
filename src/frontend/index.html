@@ -53,24 +53,21 @@
 
                 // 获取qt中绑定的交互对象
                 window.pyjs = channel.objects.interact_obj
-                var marker = L.marker([43.35, 1.13]).addTo(map);
                 let last_data = ""
                 // js 绑定qt中的信号
+
                 pyjs.sig_send_to_js.connect(function (str) {
-                    var coordSimLayerGroup = L.layerGroup().addTo(map);
                     if (str != 'STOP'){
                         if (last_data != str) {
                             document.getElementById("output").innerHTML = str;
                             let coord = str.split(",");
                             let coordMarker = L.marker([coord[0], coord[1]], {icon: droneIcon}).bindPopup(str).openPopup();
-                            coordSimLayerGroup.addLayer(coordMarker);
-                            var overlay = {'coordSimMarkers': coordSimLayerGroup};
-                            L.control.layers(null, overlay).addTo(map);
+                            coordMarker.addTo(coordSimLayerGroup);
                         }
                         last_data = str
                     } else {
                         // TODO 应该清除layer上的标记
-                        L.layerGroup().removeFrom(map)
+                        coordSimLayerGroup.clearLayers()
                     }
                 });
 
@@ -264,6 +261,9 @@
     // var editAreaZone3Layer = new L.FeatureGroup();
     // var editLineLayer = new L.FeatureGroup();
     var curentLayer = new L.FeatureGroup();
+    var coordSimLayerGroup = L.layerGroup().addTo(map);
+    var overlay = {'Layer: real path of drone': coordSimLayerGroup};
+    L.control.layers(null, overlay, {position:'bottomright'}).addTo(map);
 
     // 添加一个maker
     // var marker = L.marker([43.60427, 1.43691]).addTo(map);

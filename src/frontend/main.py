@@ -5,7 +5,7 @@ import sys
 import threading
 
 from PyQt5 import QtGui
-from PyQt5.QtCore import QUrl, pyqtSlot, pyqtSignal, QObject, QTimer
+from PyQt5.QtCore import QUrl, pyqtSlot, pyqtSignal, QObject, QTimer, QThreadPool
 from PyQt5.QtGui import QFont
 from PyQt5.QtWebChannel import QWebChannel
 from PyQt5.QtWidgets import QMainWindow, QStackedLayout, QApplication, QWidget, QFileDialog
@@ -14,7 +14,15 @@ import mainWindow, mainWidget, editWidget, simulation1Widget
 from recvData import RcvDataThread
 
 
-# import src.backend.main
+import src.backend.classes.Drone
+from src.backend.SImulationThread import Simulator, SimulatorTask
+
+FILE_PATH = os.path.abspath(__file__)
+# 得到当前文件所在的目录
+DIR_PATH = os.path.dirname(FILE_PATH)
+# 得到当前项目的根目录
+ROOT_PATH = os.path.dirname(os.path.dirname(DIR_PATH))
+
 
 class main_Widget(QWidget, mainWidget.Ui_mainWidget):
     def __init__(self, *args, **kwargs):
@@ -44,12 +52,14 @@ class edit_Widget(QWidget, editWidget.Ui_edit_Widget):
         mainWindow.textBrowser.append(__file__ + '\t[INFO]: Clean data from Map (QWebEngineView)...')
         self.editJsonTextBrowser.clear()
 
-    def saveEditInfoAsFile(self, context):
+    def saveEditInfoAsFile(self):
         mainWindow.textBrowser.append(__file__ + '\t[INFO]: Try to saveEditInfoAsFile...')
+        droneId = self.droneIdText.toPlainText()
+        flightTime = self.flightTimeText.toPlainText()
         fileName, fileType = QFileDialog.getSaveFileName(self,
                                                          "Save as",
-                                                         os.getcwd(),  # saving path
-                                                         "All Files (*);;JSON Files (*.json)")
+                                                         ROOT_PATH + '/data/temp/customLines/'+'FP_'+droneId+'_'+flightTime,
+                                                         "JSON Files (*.json)")
         if fileName != "":
             with open(fileName, 'w') as f:
                 context = self.editJsonTextBrowser.toPlainText()
@@ -63,12 +73,13 @@ class sim1_Widget(QWidget, simulation1Widget.Ui_simulation1Widget):
         super(sim1_Widget, self).__init__(*args, **kwargs)
         self.setupUi(self)
         self.simExportButton.clicked.connect(self.saveCoordAsFiles)
+        self.sim_coordTextBrowser.setFont(QFont('Consolas', 12))
 
     def saveCoordAsFiles(self):
         mainWindow.textBrowser.append(__file__ + '\t[INFO]: Try to saveCoordAsFiles...')
         fileName, fileType = QFileDialog.getSaveFileName(self,
                                                          "Save as",
-                                                         os.getcwd(),  # saving path
+                                                         ROOT_PATH + '/data/temp',  # saving path
                                                          "All Files (*);;Text Files (*.txt)")
         if fileName != "":
             with open(fileName, 'w') as f:
@@ -139,7 +150,10 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         # self.actionAdd_elements.triggered.connect(lambda: self.interact_obj.sig_send_editArea_to_js.emit(str))
         self.actionSimulationv1.triggered.connect(lambda: self.showWidgets(self.actionSimulationv1, self.qls))
 
-        self.timer = QTimer(self)
+        # Import flight planing json file for simulation
+        self.sim1W.importDroneFlightPlanButton.clicked.connect(self.importFlightPlanFile)
+
+        # self.timer = QTimer(self)
         self.sim1W.coordPushButton.clicked.connect(self.addCoordByBtn)
         self.sim1W.autoSimStartButton.clicked.connect(lambda : self.updateCoordDataByTimer(self.sim1W.setTimerSpinBox.value()))
         self.sim1W.autoSimStopButton.clicked.connect(self.stopUpdateCoordData)
@@ -147,6 +161,8 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         
         # Select a file
         self.actionImport_GeoJSON_File.triggered.connect(self.openFile)
+
+        self.flightPlanFileName=""
 
     def showWidgets(self, button, qls):
         dic = {
@@ -170,6 +186,9 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
 
         self.webEngineView.page().setWebChannel(channel)
 
+        self.thread_pool = QThreadPool()
+        self.thread_pool.setMaxThreadCount(1)  # 只允许一个线程
+
     def receive_data(self, data):
         self.textBrowser.append(__file__ + '\t[INFO]: Receive data from Map (QWebEngineView)...')
         JsonFormat = json.dumps(json.loads(data), indent=4)
@@ -188,15 +207,17 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
     
     def updateCoordData(self):
         self.interact_obj.setCoordData(self.realTimePosition)
-        record = self.sim1W.sim_coordTextBrowser.toPlainText()
-        self.sim1W.sim_coordTextBrowser.setText(record + '\n' + '[' + self.realTimePosition + ']')
+        self.sim1W.sim_coordTextBrowser.append('[' + self.realTimePosition + ']')
 
     def updateCoordDataByTimer(self, milliSecond):
-        if self.timer:      # 如果这个self.timer 为空时，就新建一个
-            self.timer = QTimer(self)
+        self.timer = QTimer(self)
+        self.recv_thread.start()
         self.timer.timeout.connect(self.updateCoordData)
         self.timer.start(milliSecond)
         self.textBrowser.append(__file__ + '\t[INFO]: Start automatic sampling...')
+        self.simulator = Simulator(self.flightPlanFileName)
+        task = SimulatorTask(self.simulator)
+        self.thread_pool.start(task)
 
     def stopUpdateCoordData(self):
         self.textBrowser.append(__file__ + '\t[INFO]: Stop automatic sampling...')
@@ -213,16 +234,24 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
             self.timer.start()
             self.textBrowser.append(__file__ + '\t[INFO]: Continue automatic sampling...')
 
-
-
     # def updateCoordDataByTimer(self, milliSecond):
     #     timer = QTimer(self)
     #     timer.timeout.connect(self.updateCoordData)
     #     timer.start(milliSecond)
 
+    def importFlightPlanFile(self):
+        self.textBrowser.append(__file__ + '\t[INFO]: Try to Import Flight Planing File...')
+        self.flightPlanFileName, filetype = QFileDialog.getOpenFileName(self,
+                                                                        "Select a JSON file",
+                                                                        ROOT_PATH + '/data/temp/customLines',
+                                                                        "JSON File (*.json)")
+        self.textBrowser.append(__file__ + '\t[INFO]: Import the file : ' + self.flightPlanFileName)
+
+
     def openFile(self):
         self.textBrowser.append(__file__ + '\t[INFO]: Try to Import JSON File...')
-        fileName, filetype = QFileDialog.getOpenFileName(self, "Select a JSON file", "/",
+        self.textBrowser.append(ROOT_PATH)
+        fileName, filetype = QFileDialog.getOpenFileName(self, "Select a JSON file", ROOT_PATH,
                                                          "JSON File (*.json)")
         if fileName != "":
             with open(fileName, 'r') as file:
@@ -251,7 +280,4 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     mainWindow = Window()
     mainWindow.show()
-    #mainWindow.updateCoordDataByTimer(1000)
-    # Create and start the socket thread
-    mainWindow.recv_thread.start()
     sys.exit(app.exec_())
