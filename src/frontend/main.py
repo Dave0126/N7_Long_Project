@@ -11,7 +11,7 @@ from PyQt5.QtWebChannel import QWebChannel
 from PyQt5.QtWidgets import QMainWindow, QStackedLayout, QApplication, QWidget, QFileDialog
 
 import mainWindow, mainWidget, editWidget, simulation1Widget
-from Simulator.Drone import Drone
+from recvData import RcvDataThread
 
 
 # import src.backend.main
@@ -112,12 +112,11 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         super(Window, self).__init__(*args, **kwargs)
         self.setupUi(self)
         self.welcomeText()
-        # index of coordinates read in json of real time coordinates
-        self.indexOfCoordinates = 0
-        self.realTimeCoordinates = []
         # Auto scroll of textBrowser in MainWindow
         self.textBrowser.setFont(QFont('Consolas', 13))
         self.textBrowser.moveCursor(QtGui.QTextCursor.End)
+        self.recv_thread = RcvDataThread(self)
+        self.realTimePosition = ""
 
         # Load Javascript of map and initialisation
         self.index = (os.path.split(os.path.realpath(__file__))[0]) + "/index.html"
@@ -188,25 +187,9 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         self.sim1W.sim_coordTextBrowser.setText(record + '\n' + '[' + coord + ']')
     
     def updateCoordData(self):
-        if self.indexOfCoordinates >= self.realTimeCoordinates.__len__() : 
-            return
-        coord = str(self.realTimeCoordinates[self.indexOfCoordinates]).replace('[', '').replace(']', '').split(",")
-        self.indexOfCoordinates += 1
-        print(coord)
-        coordStr = str(coord[0])+ "," + str(coord[1])
-        print(coord)
-        self.interact_obj.setCoordData(coordStr)
+        self.interact_obj.setCoordData(self.realTimePosition)
         record = self.sim1W.sim_coordTextBrowser.toPlainText()
-        self.sim1W.sim_coordTextBrowser.setText(record + '\n' + '[' + coordStr + ']')
-
-    def readCoordinatesFromFile(self, droneId, flightDateTime) :         
-        #Compose the file name based on the extracted informations
-        file_name = 'FP_'+droneId+'_'+flightDateTime+'.json'
-        #file_name = 'customLine1.js'
-        with open('data/temp/realTimeData/realTimeCoordinates.json') as flightPlan:
-            parsed_json = json.load(flightPlan)
-        #Extract the coordinates property of geometry
-        self.realTimeCoordinates = parsed_json['geometry']['coordinates']
+        self.sim1W.sim_coordTextBrowser.setText(record + '\n' + '[' + self.realTimePosition + ']')
 
     def updateCoordDataByTimer(self, milliSecond):
         if self.timer:      # 如果这个self.timer 为空时，就新建一个
@@ -268,6 +251,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     mainWindow = Window()
     mainWindow.show()
-    mainWindow.readCoordinatesFromFile("D13","150220231923")
     #mainWindow.updateCoordDataByTimer(1000)
+    # Create and start the socket thread
+    mainWindow.recv_thread.start()
     sys.exit(app.exec_())

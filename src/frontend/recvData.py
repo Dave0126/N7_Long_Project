@@ -1,7 +1,6 @@
 import socket
 import threading
-import folium
-import callWindow
+
 
 
 class RcvDataThread(threading.Thread):
@@ -20,14 +19,15 @@ class RcvDataThread(threading.Thread):
         with conn:
             # Continuously receive coordinates and update the map widget
             while True:
-                data = conn.recv(1024)
+                try: 
+                    data = conn.recv(1024)
+                except:
+                    print("The connection is probably lost")
                 if not data:
                     break
                 coord = data.decode().split(',')
-                print(coord)
-                lat, lon = float(coord[0]), float(coord[1])
-                #Todo : display coord (realtime data) on map 
-                #self.map_widget.coords.append((lat, lon))
-                #self.map_widget.update()
+                #print(coord)
+                self.window.realTimePosition = str(coord[0])+ "," + str(coord[1])
+                print(self.window.realTimePosition)
 
 
