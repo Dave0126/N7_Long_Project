@@ -13,15 +13,17 @@ from PyQt5.QtWidgets import QMainWindow, QStackedLayout, QApplication, QWidget, 
 import mainWindow, mainWidget, editWidget, simulation1Widget
 from recvData import RcvDataThread
 
-
-import src.backend.classes.Drone
-from src.backend.SImulationThread import Simulator, SimulatorTask
-
 FILE_PATH = os.path.abspath(__file__)
-# 得到当前文件所在的目录
+# 得到当前文件所在的目录 Get the directory where the current file is located
 DIR_PATH = os.path.dirname(FILE_PATH)
-# 得到当前项目的根目录
+# 得到当前项目的根目录 Get the root directory of the current project
 ROOT_PATH = os.path.dirname(os.path.dirname(DIR_PATH))
+
+
+# import src.backend.classes.Drone
+sys.path.append(ROOT_PATH)
+from src.backend.SimulationThread import Simulator, SimulatorTask
+
 
 
 class main_Widget(QWidget, mainWidget.Ui_mainWidget):
