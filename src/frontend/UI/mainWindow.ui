@@ -75,6 +75,7 @@
     <property name="title">
      <string>Edit</string>
     </property>
+    <addaction name="actionAdd_areas"/>
     <addaction name="actionAdd_elements"/>
    </widget>
    <widget class="QMenu" name="menuSimulation">
@@ -108,7 +109,12 @@
   </action>
   <action name="actionAdd_elements">
    <property name="text">
-    <string>Add elements</string>
+    <string>Add line</string>
+   </property>
+  </action>
+  <action name="actionAdd_areas">
+   <property name="text">
+    <string>Add areas</string>
    </property>
   </action>
  </widget>

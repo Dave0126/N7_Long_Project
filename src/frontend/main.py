@@ -10,7 +10,7 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtWebChannel import QWebChannel
 from PyQt5.QtWidgets import QMainWindow, QStackedLayout, QApplication, QWidget, QFileDialog
 
-import mainWindow, mainWidget, editWidget, simulation1Widget
+import mainWindow, mainWidget, editWidget, editAreaWidget, simulation1Widget
 from recvData import RcvDataThread
 
 FILE_PATH = os.path.abspath(__file__)
@@ -38,13 +38,7 @@ class edit_Widget(QWidget, editWidget.Ui_edit_Widget):
         self.setupUi(self)
         self.editExportButton.clicked.connect(self.saveEditInfoAsFile)
         self.editCleanTextButton.clicked.connect(self.cleanEditJsonTextBroswer)
-        self.editAreasButton.clicked.connect(self.signalEditAreasToJs)
         self.editLineButton.clicked.connect(self.signalEditLineToJs)
-
-    def signalEditAreasToJs(self):
-        chioce = self.areaClassComboBox.currentIndex()
-        mainWindow.textBrowser.append(__file__ + '\t[INFO]: Edit ZONE ' + str(chioce + 1) + ' areas in the Map ...')
-        mainWindow.interact_obj.sig_send_editArea_to_js.emit(chioce)
 
     def signalEditLineToJs(self):
         mainWindow.textBrowser.append(__file__ + '\t[INFO]: Edit line in the Map ...')
@@ -69,6 +63,36 @@ class edit_Widget(QWidget, editWidget.Ui_edit_Widget):
         else:
             mainWindow.textBrowser.append(__file__ + '\t[WARNING]: Cancel to saveEditInfoAsFile')
 
+class editArea_Widget(QWidget, editAreaWidget.Ui_editArea_Widget):
+    def __init__(self, *args, **kwargs):
+        super(editArea_Widget, self).__init__(*args, **kwargs)
+        self.setupUi(self)
+        self.editExportButton.clicked.connect(self.saveEditInfoAsFile)
+        self.editCleanTextButton.clicked.connect(self.cleanEditJsonTextBroswer)
+        self.editAreasButton.clicked.connect(self.signalEditAreasToJs)
+
+    def signalEditAreasToJs(self):
+        choice = self.areaClassComboBox.currentIndex()
+        mainWindow.textBrowser.append(__file__ + '\t[INFO]: Edit ZONE ' + str(choice + 1) + ' areas in the Map ...')
+        mainWindow.interact_obj.sig_send_editArea_to_js.emit(choice)
+
+    def cleanEditJsonTextBroswer(self):
+        mainWindow.textBrowser.append(__file__ + '\t[INFO]: Clean data from Map (QWebEngineView)...')
+        self.editJsonTextBrowser.clear()
+
+    def saveEditInfoAsFile(self):
+        mainWindow.textBrowser.append(__file__ + '\t[INFO]: Try to saveEditInfoAsFile...')
+        areaName = self.areaNameTextEdit.toPlainText()
+        fileName, fileType = QFileDialog.getSaveFileName(self,
+                                                         "Save as",
+                                                         ROOT_PATH + '/data/temp/customAreas/' + 'AREA_' + areaName,
+                                                         "JSON Files (*.json)")
+        if fileName != "":
+            with open(fileName, 'w') as f:
+                context = self.editJsonTextBrowser.toPlainText()
+                f.write(context)
+        else:
+            mainWindow.textBrowser.append(__file__ + '\t[WARNING]: Cancel to saveEditInfoAsFile')
 
 class sim1_Widget(QWidget, simulation1Widget.Ui_simulation1Widget):
     def __init__(self, *args, **kwargs):
@@ -141,15 +165,17 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         self.qls = QStackedLayout(self.frame_main)
 
         self.mainW = main_Widget()
+        self.editAreaW = editArea_Widget()
         self.editW = edit_Widget()
         self.sim1W = sim1_Widget()
 
         self.qls.addWidget(self.mainW)
+        self.qls.addWidget(self.editAreaW)
         self.qls.addWidget(self.editW)
         self.qls.addWidget(self.sim1W)
 
+        self.actionAdd_areas.triggered.connect(lambda: self.showWidgets(self.actionAdd_areas, self.qls))
         self.actionAdd_elements.triggered.connect(lambda: self.showWidgets(self.actionAdd_elements, self.qls))
-        # self.actionAdd_elements.triggered.connect(lambda: self.interact_obj.sig_send_editArea_to_js.emit(str))
         self.actionSimulationv1.triggered.connect(lambda: self.showWidgets(self.actionSimulationv1, self.qls))
 
         # Import flight planing json file for simulation
@@ -168,8 +194,9 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
 
     def showWidgets(self, button, qls):
         dic = {
-            "Add elements": 1,
-            "Simulation v1": 2,
+            "Add areas": 1,
+            "Add line": 2,
+            "Simulation v1": 3,
         }
         index = dic[button.text()]
         qls.setCurrentIndex(index)
@@ -193,9 +220,18 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
 
     def receive_data(self, data):
         self.textBrowser.append(__file__ + '\t[INFO]: Receive data from Map (QWebEngineView)...')
-        JsonFormat = json.dumps(json.loads(data), indent=4)
-        # self.textBrowser.setText(JsonFormat)
-        self.editW.editJsonTextBrowser.setText(JsonFormat)
+        context = json.loads(data)
+        if self.qls.currentWidget() == self.editW :
+            JsonFormat = json.dumps(context, indent=4)
+            self.editW.editJsonTextBrowser.setText(JsonFormat)
+        elif self.qls.currentWidget() == self.editAreaW :
+            updateContext = {"name":self.editAreaW.areaNameTextEdit.toPlainText(),
+                             "description":self.editAreaW.areaInfoTextBrowser.toPlainText(),
+                             "level":self.editAreaW.areaClassComboBox.currentIndex()}
+            context.update(updateContext)
+            JsonFormat = json.dumps(context, indent=4)
+            self.editAreaW.editJsonTextBrowser.setText(JsonFormat)
+
 
     # @pyqtSlot()
     def addCoordByBtn(self):
