@@ -2,6 +2,7 @@ import socket
 import threading
 
 
+
 class RcvDataThread(threading.Thread):
     def __init__(self, window):
         super().__init__()
@@ -14,14 +15,19 @@ class RcvDataThread(threading.Thread):
         print('hello in thread')
         # Connect to the socket
         conn, addr = self.socket.accept()
+        
         with conn:
             # Continuously receive coordinates and update the map widget
             while True:
-                data = conn.recv(1024)
+                try: 
+                    data = conn.recv(1024)
+                except:
+                    print("The connection is probably lost")
                 if not data:
                     break
                 coord = data.decode().split(',')
-                print(coord)
-                lat, lon = float(coord[0]), float(coord[1])
-                #self.map_widget.coords.append((lat, lon))
-                #self.map_widget.update()
+                #print(coord)
+                self.window.realTimePosition = str(coord[0])+ "," + str(coord[1])
+                print(self.window.realTimePosition)
+
+

@@ -135,3 +135,8 @@ The master branch is the core branch for all development activities. The output 
 
 ![screenshot1](demos/screenshot1.gif)
 
+
+2. `2023-02-23` Rewrite `MainWindow` and all JS methods for `map` and integrate with `Drone Simulation`
+
+![screenshot1](demos/screenshot2.gif)
+

@@ -46,13 +46,14 @@ for c in coordinates:
   
 #print(coordinates)
 #drone.move_to(end_latitude, end_longitude, end_altitude)
-
+index = 0
 while(True):
    current = read_json(file)
    if initial != current :
+     index += 1
      for i in current:
        if i not in initial :
-         new_zone = Zone()
+         new_zone = Zone(str(index))
          new_zone.set_data_from_file(file, current.index(i))
          zones.append(new_zone)
      for j in initial :

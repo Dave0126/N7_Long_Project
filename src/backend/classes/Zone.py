@@ -73,20 +73,37 @@ class Line:
     
         return False
 
+def extract_zones(zones_list, json_text):
+    shapes = json.load(json_text)["features"]
+    for i in range(len(shapes)) :
+        current = Zone(i, shapes[i]["geometry"]["type"], shapes[i]["geometry"]["coordinates"][0])
+        zones_list.append(current)
+
+def extract_zones_from_file(zones_list, json_file):
+    f = open(json_file)
+    shapes = json.load(f)["features"]
+    for i in range(len(shapes)) :
+        current = Zone(i, shapes[i]["geometry"]["type"], shapes[i]["geometry"]["coordinates"][0])
+        zones_list.append(current)
+
 class Zone:
-    def __init__(self, zoneLabel, zone_shape = "Polygon", coordinates = [], area_type = Area()):
+    def __init__(self, zoneLabel, zone_shape = "Polygon", coordinates = [], description = "", area_type = Area()):
         self.label = zoneLabel
         self.zone_shape = zone_shape
         self.coordinates = coordinates
         self.restricted = False
-        self.n_vertices = 0
+        self.n_vertices = len(self.coordinates)
         self.area_type = area_type
+        self.description = description
 
     def change_restriction(self):
         self.restricted = not(self.restricted)
 
     def change_area_type(self, new_area_type):
         self.area_type = new_area_type
+
+    def change_zone_description(self, new_desc):
+        self.description = new_desc
 
     def set_data_from_file(self, file, index) :
         f = open(file)
