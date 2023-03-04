@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>edit_Widget</class>
- <widget class="QWidget" name="edit_Widget">
+ <class>editArea_Widget</class>
+ <widget class="QWidget" name="editArea_Widget">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -19,58 +19,77 @@
      <item>
       <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>Drone ID.</string>
+        <string>Name</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QTextEdit" name="droneIdText">
+      <widget class="QTextEdit" name="areaNameTextEdit">
        <property name="maximumSize">
         <size>
          <width>16777215</width>
          <height>25</height>
         </size>
        </property>
-       <property name="verticalScrollBarPolicy">
-        <enum>Qt::ScrollBarAsNeeded</enum>
-       </property>
-       <property name="horizontalScrollBarPolicy">
-        <enum>Qt::ScrollBarAlwaysOff</enum>
-       </property>
       </widget>
      </item>
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
-     <item>
-      <widget class="QLabel" name="label_3">
-       <property name="text">
-        <string>Flight Time</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QTextEdit" name="flightTimeText">
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>25</height>
-        </size>
-       </property>
-       <property name="horizontalScrollBarPolicy">
-        <enum>Qt::ScrollBarAlwaysOff</enum>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <widget class="QPushButton" name="editLineButton">
+    <widget class="QLabel" name="label_3">
      <property name="text">
-      <string>EditLine</string>
+      <string>Description</string>
      </property>
     </widget>
+   </item>
+   <item>
+    <widget class="QTextBrowser" name="areaInfoTextBrowser">
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>100</height>
+      </size>
+     </property>
+     <property name="readOnly">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="bottomMargin">
+      <number>20</number>
+     </property>
+     <item>
+      <widget class="QComboBox" name="areaClassComboBox">
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <item>
+        <property name="text">
+         <string>Zone 1 (red)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Zone 2 (orange)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Zone 3 (black)</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="editAreasButton">
+       <property name="text">
+        <string>EditAreas</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="Line" name="line_2">
