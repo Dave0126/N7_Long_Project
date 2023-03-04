@@ -6,9 +6,9 @@ import threading
 
 from PyQt5 import QtGui
 from PyQt5.QtCore import QUrl, pyqtSlot, pyqtSignal, QObject, QTimer, QThreadPool
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QPixmap
 from PyQt5.QtWebChannel import QWebChannel
-from PyQt5.QtWidgets import QMainWindow, QStackedLayout, QApplication, QWidget, QFileDialog
+from PyQt5.QtWidgets import QMainWindow, QStackedLayout, QApplication, QWidget, QFileDialog, QAction, QLabel
 
 import mainWindow, mainWidget, editWidget, simulation1Widget
 from recvData import RcvDataThread
@@ -165,6 +165,20 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         self.actionImport_GeoJSON_File.triggered.connect(self.openFile)
 
         self.flightPlanFileName=""
+
+        # Set up menu action for NOTAM notification
+        notam_action = QAction('Simulate NOTAM', self)
+        notam_action.triggered.connect(self.show_notam)
+        self.menuBar().addAction(notam_action)
+    
+    def show_notam(self):
+        # Create a new QLabel widget to display the notification
+        notam_label = QLabel('NOTAM notification')
+        notam_label.setPixmap(QPixmap('notam_icon.png'))
+        message = str('Zone X unaccessible!')
+        # Add the label to the map widget
+        self.interact_obj.sig_send_to_js.emit(message)
+        #self.map.add_overlay(notam_label)
 
     def showWidgets(self, button, qls):
         dic = {

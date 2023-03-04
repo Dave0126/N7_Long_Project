@@ -25,8 +25,9 @@ class Drone:
         altitude_distance = target_altitude - self.altitude
 
         distance = math.sqrt(latitude_distance ** 2 + longitude_distance ** 2 + altitude_distance ** 2)
-
-        steps = 10
+        speed = 0.027 #km/s = 100km/h
+        steps = int(distance/speed)+1
+        print("distance = "+str(distance)+ "steps = "+ str(steps))
         latitude_step = latitude_distance / steps
         longitude_step = longitude_distance / steps
         altitude_step = altitude_distance / steps
@@ -38,12 +39,13 @@ class Drone:
 
             # Here we send the position to the frontend to be displayed
             position = str(self.latitude) + ',' + str(self.longitude) + ',' + str(self.altitude)
+              
             try:
                 socket.send(position.encode())
             except:
                 print("Connection lost!")
             print(f"Drone at ({self.latitude}, {self.longitude}, {self.altitude:.2f})")
-            time.sleep(0.5)
+            time.sleep(1)
 
     def __str__(self):
         return f"Drone at ({self.latitude:.2f}, {self.longitude:.2f}, {self.altitude:.2f})"
