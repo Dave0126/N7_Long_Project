@@ -13,6 +13,7 @@ import heapq
 import math
 import os
 
+ROOT_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def loadGeoJsonFile(obstacles, fileName):
     with open(fileName) as f:
@@ -138,7 +139,7 @@ def saveAsGridImage(gridMap):
     for p in path:
         img.putpixel((p[1], p[0]), (0, 0, 255))
     # 保存图像 Save image
-    img.save(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) + "/demos/grid.png")
+    img.save(ROOT_PATH + "/demos/grid.png")
 
 def findNonCollinearPoints(coords):
     non_collinear_points = [coords[0]]
@@ -191,7 +192,7 @@ def gridToJsonAndSaveAsFile(point_list, non_collinear_points, saveJsonFileNAme):
 
 if __name__ == '__main__':
     obstacles = []
-    loadGeoJsonFile(obstacles, '/Users/dave/Desktop/N7_Long_Project/data/tests/backend/map.json')
+    loadGeoJsonFile(obstacles, ROOT_PATH + '/data/tests/backend/map.json')
 
     startPoint = shapely.geometry.Point(1.425299, 43.596458)
     endPoint = shapely.geometry.Point(1.453875, 43.608208)
@@ -212,6 +213,6 @@ if __name__ == '__main__':
     print(nonCollinearPoints)
 
     GeoJsonPointList = [startPoint]
-    gridToJsonAndSaveAsFile(GeoJsonPointList, nonCollinearPoints, '/Users/dave/Desktop/N7_Long_Project/data/temp/customLines/FP_00000002_202302281115.json')
+    gridToJsonAndSaveAsFile(GeoJsonPointList, nonCollinearPoints, ROOT_PATH+'/data/temp/customLines/FP_00000002_202302281115.json')
 
     saveAsGridImage(gridMap)
