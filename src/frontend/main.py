@@ -10,8 +10,8 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtWebChannel import QWebChannel
 from PyQt5.QtWidgets import QMainWindow, QStackedLayout, QApplication, QWidget, QFileDialog
 
-import mainWindow, mainWidget, editWidget, editAreaWidget, simulation1Widget
-from recvData import RcvDataThread
+import mainWindow, mainWidget, editWidget, editAreaWidget, simulation1Widget, simulation2Widget
+from recvData import RcvDataThread, ThreadPool
 
 FILE_PATH = os.path.abspath(__file__)
 # 得到当前文件所在的目录 Get the directory where the current file is located
@@ -20,9 +20,11 @@ DIR_PATH = os.path.dirname(FILE_PATH)
 ROOT_PATH = os.path.dirname(os.path.dirname(DIR_PATH))
 
 
+
 # import src.backend.classes.Drone
 sys.path.append(ROOT_PATH)
 from src.backend.SimulationThread import Simulator, SimulatorTask
+import src.backend.Util as algo
 
 
 
@@ -91,6 +93,7 @@ class editArea_Widget(QWidget, editAreaWidget.Ui_editArea_Widget):
             with open(fileName, 'w') as f:
                 context = self.editJsonTextBrowser.toPlainText()
                 f.write(context)
+            algo.loadGeoJsonFile(mainWindow.obstacles, fileName)
         else:
             mainWindow.textBrowser.append(__file__ + '\t[WARNING]: Cancel to saveEditInfoAsFile')
 
@@ -114,6 +117,11 @@ class sim1_Widget(QWidget, simulation1Widget.Ui_simulation1Widget):
         else:
             mainWindow.textBrowser.append(__file__ + '\t[WARNING]: Cancel to saveCoordAsFiles')
 
+class sim2_Widget(QWidget, simulation2Widget.Ui_simulation2Widget):
+    def __init__(self, *args, **kwargs):
+        super(sim2_Widget, self).__init__(*args, **kwargs)
+        self.setupUi(self)
+        self.sim_coordTextBrowser.setFont(QFont('Consolas', 12))
 
 
 class TInteractObj(QObject):
@@ -152,7 +160,7 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         # Auto scroll of textBrowser in MainWindow
         self.textBrowser.setFont(QFont('Consolas', 13))
         self.textBrowser.moveCursor(QtGui.QTextCursor.End)
-        self.recv_thread = RcvDataThread(self)
+        self.recvThreadPool = ThreadPool(max_workers=5)
         self.realTimePosition = ""
 
         # Load Javascript of map and initialisation
@@ -168,35 +176,47 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         self.editAreaW = editArea_Widget()
         self.editW = edit_Widget()
         self.sim1W = sim1_Widget()
+        self.sim2W = sim2_Widget()
 
         self.qls.addWidget(self.mainW)
         self.qls.addWidget(self.editAreaW)
         self.qls.addWidget(self.editW)
         self.qls.addWidget(self.sim1W)
+        self.qls.addWidget(self.sim2W)
 
         self.actionAdd_areas.triggered.connect(lambda: self.showWidgets(self.actionAdd_areas, self.qls))
         self.actionAdd_elements.triggered.connect(lambda: self.showWidgets(self.actionAdd_elements, self.qls))
         self.actionSimulationv1.triggered.connect(lambda: self.showWidgets(self.actionSimulationv1, self.qls))
+        self.actionSimulation_v2.triggered.connect(lambda: self.showWidgets(self.actionSimulation_v2, self.qls))
 
-        # Import flight planing json file for simulation
+        # Simulation v1 Button
         self.sim1W.importDroneFlightPlanButton.clicked.connect(self.importFlightPlanFile)
-
-        # self.timer = QTimer(self)
         self.sim1W.coordPushButton.clicked.connect(self.addCoordByBtn)
         self.sim1W.autoSimStartButton.clicked.connect(lambda : self.updateCoordDataByTimer(self.sim1W.setTimerSpinBox.value()))
         self.sim1W.autoSimStopButton.clicked.connect(self.stopUpdateCoordData)
         self.sim1W.autoSimPulseOrContinueButton.clicked.connect(self.pulseOrContinueUpdateCoordData)
+
+        # Simulation v2 Button
+        self.sim2W.importDroneFlightPlanButton.clicked.connect(self.importFlightPlanFile)
+        self.sim2W.autoSimStartButton.clicked.connect(lambda: self.updateCoordDataByTimer(self.sim2W.setTimerSpinBox.value()))
+        self.sim2W.autoSimStopButton.clicked.connect(self.stopUpdateCoordData)
+        self.sim2W.autoSimPulseOrContinueButton.clicked.connect(self.pulseOrContinueUpdateCoordData)
         
         # Select a file
         self.actionImport_GeoJSON_File.triggered.connect(self.openFile)
 
+        # Initial flightPlanFileName
         self.flightPlanFileName=""
+
+        # Initial obstacles areas
+        self.obstacles = []
 
     def showWidgets(self, button, qls):
         dic = {
             "Add areas": 1,
             "Add line": 2,
             "Simulation v1": 3,
+            "Simulation v2": 4
         }
         index = dic[button.text()]
         qls.setCurrentIndex(index)
@@ -216,7 +236,7 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         self.webEngineView.page().setWebChannel(channel)
 
         self.thread_pool = QThreadPool()
-        self.thread_pool.setMaxThreadCount(1)  # 只允许一个线程
+        self.thread_pool.setMaxThreadCount(2)  # 只允许一个线程
 
     def receive_data(self, data):
         self.textBrowser.append(__file__ + '\t[INFO]: Receive data from Map (QWebEngineView)...')
@@ -245,23 +265,31 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
     
     def updateCoordData(self):
         self.interact_obj.setCoordData(self.realTimePosition)
-        self.sim1W.sim_coordTextBrowser.append('[' + self.realTimePosition + ']')
+        if self.qls.currentWidget() == self.sim1W:
+            self.sim1W.sim_coordTextBrowser.append('[' + self.realTimePosition + ']')
+        elif self.qls.currentWidget() == self.sim2W:
+            self.sim2W.sim_coordTextBrowser.append('[' + self.realTimePosition + ']')
 
     def updateCoordDataByTimer(self, milliSecond):
+        host = '127.0.0.1'
+        port = 12349
         self.timer = QTimer(self)
-        self.recv_thread.start()
+        # self.recv_thread = RcvDataThread(self, '127.0.0.1', 12349)
+        self.recvThreadPool.submit(RcvDataThread(self, host, port).run)
         self.timer.timeout.connect(self.updateCoordData)
         self.timer.start(milliSecond)
         self.textBrowser.append(__file__ + '\t[INFO]: Start automatic sampling...')
-        self.simulator = Simulator(self.flightPlanFileName)
-        task = SimulatorTask(self.simulator)
+        task = SimulatorTask(Simulator(self.flightPlanFileName, host, port))
         self.thread_pool.start(task)
 
     def stopUpdateCoordData(self):
         self.textBrowser.append(__file__ + '\t[INFO]: Stop automatic sampling...')
         self.timer.stop()
         self.timer.deleteLater()
-        self.sim1W.sim_coordTextBrowser.clear()
+        if self.qls.currentWidget() == self.sim1W:
+            self.sim1W.sim_coordTextBrowser.clear()
+        elif self.qls.currentWidget() == self.sim2W:
+            self.sim2W.sim_coordTextBrowser.clear()
         self.interact_obj.sig_send_to_js.emit('STOP')
 
     def pulseOrContinueUpdateCoordData(self):
@@ -285,7 +313,6 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
                                                                         "JSON File (*.json)")
         self.textBrowser.append(__file__ + '\t[INFO]: Import the file : ' + self.flightPlanFileName)
 
-
     def openFile(self):
         self.textBrowser.append(__file__ + '\t[INFO]: Try to Import JSON File...')
         self.textBrowser.append(ROOT_PATH)
@@ -296,6 +323,8 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
                 content = file.read()  # 读取文件内容
                 self.textBrowser.append(__file__ + '\t[INFO]: Import the file : ' + fileName)
                 # self.textBrowser.append(content)
+                algo.loadGeoJsonFile(self.obstacles, fileName)
+                print(self.obstacles)
                 self.interact_obj.sig_send_jsonfile_to_js.emit(content)
         else:
             self.textBrowser.append(__file__ + '\t[WARNING]: Cancel to Import JSON File')
@@ -312,6 +341,17 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
                    "\n" \
                    "                                                                                                                                Version 1.0    \n"
         self.textBrowser.append(logoText)
+
+    def loadFlightPlanToMap(self, fileName):
+        self.textBrowser.append(__file__ + '\t[INFO]: Try to Import JSON File...')
+        self.textBrowser.append(ROOT_PATH)
+        if fileName != "":
+            with open(fileName, 'r') as file:
+                content = file.read()  # 读取文件内容
+                self.textBrowser.append(__file__ + '\t[INFO]: Import the file : ' + fileName)
+                self.interact_obj.sig_send_jsonfile_to_js.emit(content)
+        else:
+            self.textBrowser.append(__file__ + '\t[WARNING]: Cancel to Import JSON File')
 
 
 if __name__ == "__main__":

@@ -83,6 +83,7 @@
      <string>Simulation</string>
     </property>
     <addaction name="actionSimulationv1"/>
+    <addaction name="actionSimulation_v2"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -115,6 +116,11 @@
   <action name="actionAdd_areas">
    <property name="text">
     <string>Add areas</string>
+   </property>
+  </action>
+  <action name="actionSimulation_v2">
+   <property name="text">
+    <string>Simulation v2</string>
    </property>
   </action>
  </widget>

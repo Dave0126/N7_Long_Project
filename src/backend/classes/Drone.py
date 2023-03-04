@@ -26,7 +26,7 @@ class Drone:
 
         distance = math.sqrt(latitude_distance ** 2 + longitude_distance ** 2 + altitude_distance ** 2)
 
-        steps = 10
+        steps = math.ceil(distance * 1000)
         latitude_step = latitude_distance / steps
         longitude_step = longitude_distance / steps
         altitude_step = altitude_distance / steps

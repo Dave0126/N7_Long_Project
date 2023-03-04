@@ -19,3 +19,4 @@ ui:
 	$(PYUI) -o src/frontend/editAreaWidget.py src/frontend/UI/editAreaWidget.ui
 	$(PYUI) -o src/frontend/simulation1Widget.py src/frontend/UI/simulation1Widget.ui
 	$(PYUI) -o src/frontend/mainWindow.py src/frontend/UI/mainWindow.ui
+	$(PYUI) -o src/frontend/simulation2Widget.py src/frontend/UI/simulation2Widget.ui
