@@ -21,23 +21,22 @@ class RcvCmdThread(QThread):
         global status 
         status = 0
         conn, addr = self.s.accept()
-        while conn:
-            print("StatusReceiverTask running ....")
-            try:
-                data = conn.recv(1024)
-                strData = data.decode()
-            except:
-                print("The connection is probably lost")
-            if not data:
-                break
-            if strData == 'pulse':
-                status = 1
-            else :
-                if strData == 'continue':
-                    status = 2
+        with conn:
+            while True : 
+                try:
+                    data = conn.recv(1024)
+                    strData = data.decode()
+                except:
+                    print("The connection is probably lost")
+                if not data:
+                    break
+                if strData == 'pulse':
+                    status = 1
                 else :
-                    status = 3
-                    self.s.close()
+                    if strData == 'continue':
+                        status = 2
+                    else :
+                        status = 3
         self.s.close()
 
 class StatusReceiverTask(QRunnable):

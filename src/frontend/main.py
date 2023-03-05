@@ -285,13 +285,15 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         self.timer.start(milliSecond)
         self.textBrowser.append(__file__ + '\t[INFO]: Start automatic sampling...')
         task = SimulatorTask(Simulator(self.flightPlanFileName, host, port))
+
         statusTask = StatusReceiverTask(RcvCmdThread(self.flightPlanFileName, host, port+1))
-        self.thread_pool.start(task)
         self.thread_pool.start(statusTask)
+        self.thread_pool.start(task)
         try:
+            self.socket = socket.socket()
             self.socket.connect((host, port+1))
-        except:
-            print("The server that receives status is unreachable!")
+        except Exception as e:
+            print(f"Exception while trying to connect to ReceiverTask: {e}")
             return
 
     def stopUpdateCoordData(self):
@@ -301,7 +303,6 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         #envoyer socket avec text = "pulse" à backend
         self.socket.send("stop".encode())
         self.socket.close()
-        
         if self.qls.currentWidget() == self.sim1W:
             self.sim1W.sim_coordTextBrowser.clear()
         elif self.qls.currentWidget() == self.sim2W:
