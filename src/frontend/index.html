@@ -81,7 +81,7 @@
 
                 pyjs.sig_send_editArea_to_js.connect(function (choice) {
                     document.getElementById("output").innerHTML = choice;
-                    currentControlToolbar.remove()
+                    currentControlToolbar.remove();
 
                     // draw 添加绘制图层
                     var drawnItems = new L.FeatureGroup();
@@ -140,12 +140,12 @@
                         });
                         console.log("Edited " + countOfEditedLayers + " layers");
                     });
-                    currentControlToolbar = drawAreaControl
+                    currentControlToolbar = drawAreaControl;
                 })
 
                 pyjs.sig_send_editLine_to_js.connect(function (str) {
                     document.getElementById("output").innerHTML = 'line';
-                    currentControlToolbar.remove()
+                    currentControlToolbar.remove();
                     // draw 添加绘制图层
                     var drawnLine = new L.FeatureGroup();
                     map.addLayer(drawnLine);
@@ -192,20 +192,19 @@
                         });
                         console.log("Edited " + countOfEditedLayers + " layers");
                     });
-                    currentControlToolbar = drawLineControl
+                    currentControlToolbar = drawLineControl;
                 })
 
                 pyjs.sig_send_addStart_to_js.connect(function (str) {
                     document.getElementById("output").innerHTML = 'start';
-                    currentControlToolbar.remove()
+                    currentControlToolbar.remove();
 
                     // draw 添加绘制图层
                     var startMarker = new L.FeatureGroup();
                     map.addLayer(startMarker);
 
-
                     //添加绘制控件
-                    var startMarkerControl = new L.Control.Draw({
+                    var startMarkerControlAdd = new L.Control.Draw({
                         draw: {
                             polyline: false,
                             polygon: false,
@@ -216,20 +215,27 @@
                         },
                         edit: {
                             //绘制图层
+                            featureGroup: startMarker
+                        }
+                    });
+                    var startMarkerControlEditDel = new L.Control.Draw({
+                        edit: {
+                            //绘制图层
                             featureGroup: startMarker,
                             edit: true,
                             remove: true,
-                        }
+                        },
+                        draw: false
                     });
+                    
                     //添加绘制控件
-                    map.addControl(startMarkerControl);
+                    map.addControl(startMarkerControlAdd);
                     //绘制事件
                     map.on(L.Draw.Event.CREATED, function (e) {
                         var type = e.layerType,
                             layer = e.layer;
-                        if (type === 'marker') {
-                            layer.bindPopup('A popup!');
-                        }
+                        map.removeControl(startMarkerControlAdd);
+                        map.addControl(startMarkerControlEditDel);
                         startMarker.addLayer(layer);
                         curentLayer = startMarker;
                     });
@@ -242,7 +248,11 @@
                         });
                         console.log("Edited " + countOfEditedLayers + " layers");
                     });
-                    currentControlToolbar = startMarkerControl
+                    map.on('draw:deletestop', function (e) {
+                        map.removeControl(startMarkerControlEditDel);
+                        map.addControl(startMarkerControlAdd);
+                    });
+                    currentControlToolbar = startMarkerControlAdd;
                 })
 
                 pyjs.sig_send_addEnd_to_js.connect(function (str) {
@@ -255,7 +265,7 @@
 
 
                     //添加绘制控件
-                    var endMarkerControl = new L.Control.Draw({
+                    var endMarkerControlAdd = new L.Control.Draw({
                         draw: {
                             polyline: false,
                             polygon: false,
@@ -266,22 +276,28 @@
                         },
                         edit: {
                             //绘制图层
+                            featureGroup: endMarker
+                        }
+                    });
+                    var endMarkerControlEditDel = new L.Control.Draw({
+                        edit: {
+                            //绘制图层
                             featureGroup: endMarker,
                             edit: true,
                             remove: true,
-                        }
+                        },
+                        draw: false
                     });
                     //添加绘制控件
-                    map.addControl(endMarkerControl);
+                    map.addControl(endMarkerControlAdd);
                     //绘制事件
                     map.on(L.Draw.Event.CREATED, function (e) {
                         var type = e.layerType,
                             layer = e.layer;
-                        if (type === 'marker') {
-                            layer.bindPopup('A popup!');
-                        }
                         endMarker.addLayer(layer);
                         curentLayer = endMarker;
+                        map.removeControl(endMarkerControlAdd);
+                        map.addControl(endMarkerControlEditDel);
                     });
                     // 修改事件
                     map.on(L.Draw.Event.EDITED, function (e) {
@@ -292,7 +308,11 @@
                         });
                         console.log("Edited " + countOfEditedLayers + " layers");
                     });
-                    currentControlToolbar = endMarkerControl
+                    map.on(L.Draw.Event.DELETED, function (e) {
+                        map.removeControl(endMarkerControlEditDel);
+                        map.addControl(endMarkerControlAdd);
+                    });
+                    currentControlToolbar = endMarkerControlAdd;
                 })
 
                 // 按钮点击事件
