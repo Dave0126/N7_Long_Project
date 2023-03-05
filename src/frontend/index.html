@@ -195,6 +195,106 @@
                     currentControlToolbar = drawLineControl
                 })
 
+                pyjs.sig_send_addStart_to_js.connect(function (str) {
+                    document.getElementById("output").innerHTML = 'start';
+                    currentControlToolbar.remove()
+
+                    // draw 添加绘制图层
+                    var startMarker = new L.FeatureGroup();
+                    map.addLayer(startMarker);
+
+
+                    //添加绘制控件
+                    var startMarkerControl = new L.Control.Draw({
+                        draw: {
+                            polyline: false,
+                            polygon: false,
+                            rectangle: false,
+                            circle: false,
+                            marker: true,
+                            circlemarker: false
+                        },
+                        edit: {
+                            //绘制图层
+                            featureGroup: startMarker,
+                            edit: true,
+                            remove: true,
+                        }
+                    });
+                    //添加绘制控件
+                    map.addControl(startMarkerControl);
+                    //绘制事件
+                    map.on(L.Draw.Event.CREATED, function (e) {
+                        var type = e.layerType,
+                            layer = e.layer;
+                        if (type === 'marker') {
+                            layer.bindPopup('A popup!');
+                        }
+                        startMarker.addLayer(layer);
+                        curentLayer = startMarker;
+                    });
+                    // 修改事件
+                    map.on(L.Draw.Event.EDITED, function (e) {
+                        var layers = e.layers;
+                        var countOfEditedLayers = 0;
+                        layers.eachLayer(function (layer) {
+                            countOfEditedLayers++;
+                        });
+                        console.log("Edited " + countOfEditedLayers + " layers");
+                    });
+                    currentControlToolbar = startMarkerControl
+                })
+
+                pyjs.sig_send_addEnd_to_js.connect(function (str) {
+                    document.getElementById("output").innerHTML = 'end';
+                    currentControlToolbar.remove()
+
+                    // draw 添加绘制图层
+                    var endMarker = new L.FeatureGroup();
+                    map.addLayer(endMarker);
+
+
+                    //添加绘制控件
+                    var endMarkerControl = new L.Control.Draw({
+                        draw: {
+                            polyline: false,
+                            polygon: false,
+                            rectangle: false,
+                            circle: false,
+                            marker: true,
+                            circlemarker: false
+                        },
+                        edit: {
+                            //绘制图层
+                            featureGroup: endMarker,
+                            edit: true,
+                            remove: true,
+                        }
+                    });
+                    //添加绘制控件
+                    map.addControl(endMarkerControl);
+                    //绘制事件
+                    map.on(L.Draw.Event.CREATED, function (e) {
+                        var type = e.layerType,
+                            layer = e.layer;
+                        if (type === 'marker') {
+                            layer.bindPopup('A popup!');
+                        }
+                        endMarker.addLayer(layer);
+                        curentLayer = endMarker;
+                    });
+                    // 修改事件
+                    map.on(L.Draw.Event.EDITED, function (e) {
+                        var layers = e.layers;
+                        var countOfEditedLayers = 0;
+                        layers.eachLayer(function (layer) {
+                            countOfEditedLayers++;
+                        });
+                        console.log("Edited " + countOfEditedLayers + " layers");
+                    });
+                    currentControlToolbar = endMarkerControl
+                })
+
                 // 按钮点击事件
                 document.getElementById("send").onclick = function () {
                     var text_area = document.getElementById("output");

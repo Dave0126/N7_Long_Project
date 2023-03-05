@@ -29,7 +29,7 @@ def loadGeoJsonFile(obstacles, fileName):
                 obstacles.append(sub_geom)
 
 
-def jsonToGrid(map, resolution):
+def jsonToGrid(map, resolution, startPoint, endPoint, obstacles):
     bounds = map.bounds
     print(bounds)
     rows = int(np.ceil((bounds[3] - bounds[1]) / resolution))
@@ -121,7 +121,7 @@ def astar(array, start, goal):
     return None
 
 
-def saveAsGridImage(gridMap):
+def saveAsGridImage(gridMap, path):
     # 创建一个新的图像，将所有像素设置为黑色 Create a new image with all pixels set to black
     img = Image.new('RGB', (gridMap.shape[1], gridMap.shape[0]), (255, 255, 255))
     # 将网格数据复制到像素值中 Copy grid data to pixel values
@@ -166,7 +166,7 @@ def findNonCollinearPoints(coords):
     return non_collinear_points
 
 
-def gridToJsonAndSaveAsFile(point_list, non_collinear_points, saveJsonFileNAme):
+def gridToJsonAndSaveAsFile(point_list, non_collinear_points, saveJsonFileNAme, map, resolution, endPoint):
     rows = int(np.ceil((map.bounds[3] - map.bounds[1]) / resolution))
     cols = int(np.ceil((map.bounds[2] - map.bounds[0]) / resolution))
     for node in non_collinear_points:
@@ -190,19 +190,16 @@ def gridToJsonAndSaveAsFile(point_list, non_collinear_points, saveJsonFileNAme):
         f.write(geojson_object)
 
 
-if __name__ == '__main__':
+def createPath(startPoint  = shapely.geometry.Point(1.425299, 43.596458) , endPoint  = shapely.geometry.Point(1.453875, 43.608208)):
     obstacles = []
     loadGeoJsonFile(obstacles, ROOT_PATH + '/data/tests/backend/map.json')
-
-    startPoint = shapely.geometry.Point(1.425299, 43.596458)
-    endPoint = shapely.geometry.Point(1.453875, 43.608208)
 
     # 网格分辨率 Grid resolution : 1/10000 * 111km
     resolution = 1 / 10000
     map = shapely.geometry.MultiPolygon(obstacles)
     map = map.union(startPoint)
     map = map.union(endPoint)
-    gridMap, start, goal = jsonToGrid(map, resolution)
+    gridMap, start, goal = jsonToGrid(map, resolution, startPoint, endPoint, obstacles)
 
     # Run a_star
     path = astar(np.array(gridMap), start, goal)
@@ -213,6 +210,6 @@ if __name__ == '__main__':
     print(nonCollinearPoints)
 
     GeoJsonPointList = [startPoint]
-    gridToJsonAndSaveAsFile(GeoJsonPointList, nonCollinearPoints, ROOT_PATH+'/data/temp/customLines/FP_00000002_202302281115.json')
+    gridToJsonAndSaveAsFile(GeoJsonPointList, nonCollinearPoints, ROOT_PATH+'/data/temp/customLines/FP_00000002_202302281115.json', map, resolution, endPoint)
 
-    saveAsGridImage(gridMap)
+    saveAsGridImage(gridMap, path)

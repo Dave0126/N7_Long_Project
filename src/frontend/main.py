@@ -25,6 +25,8 @@ ROOT_PATH = os.path.dirname(os.path.dirname(DIR_PATH))
 sys.path.append(ROOT_PATH)
 from src.backend.SimulationThread import Simulator, SimulatorTask
 import src.backend.Util as algo
+from shapely import affinity, LineString, Point
+import shapely.geometry
 
 
 
@@ -122,7 +124,31 @@ class sim2_Widget(QWidget, simulation2Widget.Ui_simulation2Widget):
         super(sim2_Widget, self).__init__(*args, **kwargs)
         self.setupUi(self)
         self.sim_coordTextBrowser.setFont(QFont('Consolas', 12))
+        self.addStartPointPushButton.clicked.connect(self.signalAddStartToJs)
+        self.addEndPointPushButton.clicked.connect(self.signalAddEndToJs)
+        self.createPlanPushButton.clicked.connect(self.createPlan)
+        self.startPoint = None
+        self.endPoint = None
+        self.currentPoint = None
 
+    def signalAddStartToJs(self):
+        self.currentPoint = "Start"
+        mainWindow.textBrowser.append(__file__ + '\t[INFO]: Adding a starting point for the path')
+        mainWindow.interact_obj.sig_send_addStart_to_js.emit('1')
+
+    def signalAddEndToJs(self):
+        self.currentPoint = "End"
+        mainWindow.textBrowser.append(__file__ + '\t[INFO]: Adding an ending point for the path')
+        mainWindow.interact_obj.sig_send_addEnd_to_js.emit('1')
+
+    def createPlan(self):
+        mainWindow.textBrowser.append(__file__ + '\t[INFO]: Attempting to create path')
+        if self.endPoint and self.startPoint :
+            mainWindow.textBrowser.append(__file__ + '\t[INFO]: Creating path')
+            algo.createPath(shapely.geometry.Point(self.startPoint[0], self.startPoint[1]), shapely.geometry.Point(self.endPoint[0], self.endPoint[1]))
+            mainWindow.textBrowser.append(__file__ + '\t[INFO]: Path created, saved in ' + ROOT_PATH + '/data/temp/customLines/FP_00000002_202302281115.json')
+        else :
+            mainWindow.textBrowser.append(__file__ + '\t[INFO]: Failed to create path, missing start or end point')
 
 class TInteractObj(QObject):
     """
@@ -136,6 +162,8 @@ class TInteractObj(QObject):
     sig_send_jsonfile_to_js = pyqtSignal(str)
     sig_send_editArea_to_js = pyqtSignal(int)
     sig_send_editLine_to_js = pyqtSignal(str)
+    sig_send_addStart_to_js = pyqtSignal(str)
+    sig_send_addEnd_to_js = pyqtSignal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -251,6 +279,14 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
             context.update(updateContext)
             JsonFormat = json.dumps(context, indent=4)
             self.editAreaW.editJsonTextBrowser.setText(JsonFormat)
+        elif self.qls.currentWidget() == self.sim2W :
+            JsonFormat = json.dumps(context, indent=4)
+            self.sim2W.sim_coordTextBrowser.setText(JsonFormat)
+            pointJson = json.loads(JsonFormat)
+            if self.sim2W.currentPoint == "Start":
+                self.sim2W.startPoint = pointJson["features"][0]["geometry"]["coordinates"]
+            elif self.sim2W.currentPoint == "End":
+                self.sim2W.endPoint = pointJson["features"][0]["geometry"]["coordinates"]
 
 
     # @pyqtSlot()
