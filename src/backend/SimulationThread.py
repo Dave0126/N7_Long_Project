@@ -65,3 +65,5 @@ class SimulatorTask(QRunnable):
             print(f"Exception in SimulatorTask: {e}")
         finally:
             self.simulator.s.close()
+
+        

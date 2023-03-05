@@ -57,8 +57,15 @@
                 // js 绑定qt中的信号
 
                 pyjs.sig_send_to_js.connect(function (str) {
+                /*    if (str.includes("Zone")) {
+                            // Do something if str contains the term "Zone"
+                            console.log("Found Zone in str: ", str);
+                    }
+                    else*/ console.log("STR : ", str); 
                     if (str != 'STOP'){
+                        print(str);
                         if (last_data != str) {
+                            console.log("STRRR : ", str);
                             document.getElementById("output").innerHTML = str;
                             let coord = str.split(",");
                             let coordMarker = L.marker([coord[0], coord[1]], {icon: droneIcon}).bindPopup(str).openPopup();
