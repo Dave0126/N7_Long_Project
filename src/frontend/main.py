@@ -13,6 +13,7 @@ from PyQt5.QtWidgets import QMainWindow, QStackedLayout, QApplication, QWidget, 
 import mainWindow, mainWidget, editWidget, editAreaWidget, simulation1Widget, simulation2Widget
 from recvData import RcvDataThread, ThreadPool
 
+
 FILE_PATH = os.path.abspath(__file__)
 # 得到当前文件所在的目录 Get the directory where the current file is located
 DIR_PATH = os.path.dirname(FILE_PATH)
@@ -24,6 +25,7 @@ ROOT_PATH = os.path.dirname(os.path.dirname(DIR_PATH))
 # import src.backend.classes.Drone
 sys.path.append(ROOT_PATH)
 from src.backend.SimulationThread import Simulator, SimulatorTask
+from src.backend.RecvCmdThread import StatusReceiverTask, RcvCmdThread
 import src.backend.Util as algo
 
 
@@ -211,6 +213,9 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         # Initial obstacles areas
         self.obstacles = []
 
+        # socket to send status (pulse, continue or stop)
+        self.socket = socket.socket()
+
     def showWidgets(self, button, qls):
         dic = {
             "Add areas": 1,
@@ -280,12 +285,23 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         self.timer.start(milliSecond)
         self.textBrowser.append(__file__ + '\t[INFO]: Start automatic sampling...')
         task = SimulatorTask(Simulator(self.flightPlanFileName, host, port))
+        statusTask = StatusReceiverTask(RcvCmdThread(self.flightPlanFileName, host, port+1))
         self.thread_pool.start(task)
+        self.thread_pool.start(statusTask)
+        try:
+            self.socket.connect((host, port+1))
+        except:
+            print("The server that receives status is unreachable!")
+            return
 
     def stopUpdateCoordData(self):
         self.textBrowser.append(__file__ + '\t[INFO]: Stop automatic sampling...')
         self.timer.stop()
         self.timer.deleteLater()
+        #envoyer socket avec text = "pulse" à backend
+        self.socket.send("stop".encode())
+        self.socket.close()
+        
         if self.qls.currentWidget() == self.sim1W:
             self.sim1W.sim_coordTextBrowser.clear()
         elif self.qls.currentWidget() == self.sim2W:
@@ -296,9 +312,13 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         if self.timer.isActive():
             self.timer.stop()
             self.textBrowser.append(__file__ + '\t[INFO]: Pulse automatic sampling...')
+            #envoyer socket avec text = "pulse" à backend
+            self.socket.send("pulse".encode())
         else:
             self.timer.start()
             self.textBrowser.append(__file__ + '\t[INFO]: Continue automatic sampling...')
+            #envoyer socket avec text="continue" à backend
+            self.socket.send("continue".encode())
 
     # def updateCoordDataByTimer(self, milliSecond):
     #     timer = QTimer(self)

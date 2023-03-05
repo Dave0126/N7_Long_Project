@@ -3,6 +3,8 @@ import os
 import socket
 import time
 
+from src.backend import RecvCmdThread
+
 
 class Drone:
     def __init__(self, droneID, flightDatetime, latitude=0, longitude=0, altitude=0):
@@ -38,12 +40,17 @@ class Drone:
 
             # Here we send the position to the frontend to be displayed
             position = str(self.latitude) + ',' + str(self.longitude) + ',' + str(self.altitude)
-              
+            if RecvCmdThread.status == 3:
+                socket.close()
+                return
             try:
+                while RecvCmdThread.status == 1:
+                    time.sleep(0.1)
+
                 socket.send(position.encode())
             except:
                 print("Connection lost!")
-            print(f"Drone at ({self.latitude}, {self.longitude}, {self.altitude:.2f})")
+            print(f"Drone at ({self.latitude}, {self.longitude}, {self.altitude:.2f})  status = "+ str(RecvCmdThread.status))
             time.sleep(1)
 
     def __str__(self):
