@@ -95,7 +95,8 @@ class editArea_Widget(QWidget, editAreaWidget.Ui_editArea_Widget):
             with open(fileName, 'w') as f:
                 context = self.editJsonTextBrowser.toPlainText()
                 f.write(context)
-            algo.loadGeoJsonFile(mainWindow.obstacles, fileName)
+            mainWindow.obstacles = algo.loadGeoJsonFile(mainWindow.obstacles, fileName)
+            print(mainWindow.obstacles)
         else:
             mainWindow.textBrowser.append(__file__ + '\t[WARNING]: Cancel to saveEditInfoAsFile')
 
@@ -130,23 +131,31 @@ class sim2_Widget(QWidget, simulation2Widget.Ui_simulation2Widget):
         self.startPoint = None
         self.endPoint = None
         self.currentPoint = None
+        self.resolution = 1 / 10000
 
     def signalAddStartToJs(self):
         self.currentPoint = "Start"
         mainWindow.textBrowser.append(__file__ + '\t[INFO]: Adding a starting point for the path')
-        mainWindow.interact_obj.sig_send_addStart_to_js.emit('1')
+        mainWindow.interact_obj.sig_send_addStart_to_js.emit('end_point')
 
     def signalAddEndToJs(self):
         self.currentPoint = "End"
         mainWindow.textBrowser.append(__file__ + '\t[INFO]: Adding an ending point for the path')
-        mainWindow.interact_obj.sig_send_addEnd_to_js.emit('1')
+        mainWindow.interact_obj.sig_send_addEnd_to_js.emit('start_point')
 
     def createPlan(self):
+        mainWindow.interact_obj.sig_send_click_off_to_js.emit('click_off')
         mainWindow.textBrowser.append(__file__ + '\t[INFO]: Attempting to create path')
         if self.endPoint and self.startPoint :
             mainWindow.textBrowser.append(__file__ + '\t[INFO]: Creating path')
-            algo.createPath(shapely.geometry.Point(self.startPoint[0], self.startPoint[1]), shapely.geometry.Point(self.endPoint[0], self.endPoint[1]))
-            mainWindow.textBrowser.append(__file__ + '\t[INFO]: Path created, saved in ' + ROOT_PATH + '/data/temp/customLines/FP_00000002_202302281115.json')
+            autoFlightPlanFile = ROOT_PATH + '/data/temp/customLines/'+'AUTOFP_' + self.droneIdTextEdit.toPlainText() + '_' + self.flightDateTextEdit.toPlainText() + '.json'
+            algo.createFlightPlan(mainWindow.obstacles,
+                                  self.startPoint,
+                                  self.endPoint,
+                                  self.resolution,
+                                  autoFlightPlanFile)
+            mainWindow.textBrowser.append(__file__ + '\t[INFO]: Path created, saved as ' + autoFlightPlanFile)
+            mainWindow.loadFlightPlanToMap(autoFlightPlanFile)
         else :
             mainWindow.textBrowser.append(__file__ + '\t[INFO]: Failed to create path, missing start or end point')
 
@@ -164,16 +173,23 @@ class TInteractObj(QObject):
     sig_send_editLine_to_js = pyqtSignal(str)
     sig_send_addStart_to_js = pyqtSignal(str)
     sig_send_addEnd_to_js = pyqtSignal(str)
+    sig_send_click_off_to_js = pyqtSignal(str)
+    sig_send_auto_flight_plan_jsonfile_to_js = pyqtSignal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         # 交互对象接收到js调用后执行的回调函数.
         self.receive_str_from_js_callback = None
+        self.receive_coord_from_js_callback = None
 
     # str表示接收str类型的信号,信号是从js发出的.
     @pyqtSlot(str)
     def receive_str_from_js(self, str):
         self.receive_str_from_js_callback(str)
+
+    @pyqtSlot(str)
+    def receive_coord_from_js(self, str):
+        self.receive_coord_from_js_callback(str)
 
     @pyqtSlot(str)
     def setCoordData(self, data):
@@ -256,6 +272,7 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         """
         self.interact_obj = TInteractObj(self)
         self.interact_obj.receive_str_from_js_callback = self.receive_data
+        self.interact_obj.receive_coord_from_js_callback = self.receive_coord
 
         channel = QWebChannel(self.webEngineView.page())
         # interact_obj 为交互对象的名字,js中使用.
@@ -269,25 +286,26 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
     def receive_data(self, data):
         self.textBrowser.append(__file__ + '\t[INFO]: Receive data from Map (QWebEngineView)...')
         context = json.loads(data)
-        if self.qls.currentWidget() == self.editW :
+        if self.qls.currentWidget() == self.editW:
             JsonFormat = json.dumps(context, indent=4)
             self.editW.editJsonTextBrowser.setText(JsonFormat)
-        elif self.qls.currentWidget() == self.editAreaW :
-            updateContext = {"name":self.editAreaW.areaNameTextEdit.toPlainText(),
-                             "description":self.editAreaW.areaInfoTextBrowser.toPlainText(),
-                             "level":self.editAreaW.areaClassComboBox.currentIndex()}
+        elif self.qls.currentWidget() == self.editAreaW:
+            updateContext = {"name": self.editAreaW.areaNameTextEdit.toPlainText(),
+                             "description": self.editAreaW.areaInfoTextBrowser.toPlainText(),
+                             "level": self.editAreaW.areaClassComboBox.currentIndex()}
             context.update(updateContext)
             JsonFormat = json.dumps(context, indent=4)
             self.editAreaW.editJsonTextBrowser.setText(JsonFormat)
-        elif self.qls.currentWidget() == self.sim2W :
-            JsonFormat = json.dumps(context, indent=4)
-            self.sim2W.sim_coordTextBrowser.setText(JsonFormat)
-            pointJson = json.loads(JsonFormat)
-            if self.sim2W.currentPoint == "Start":
-                self.sim2W.startPoint = pointJson["features"][0]["geometry"]["coordinates"]
-            elif self.sim2W.currentPoint == "End":
-                self.sim2W.endPoint = pointJson["features"][0]["geometry"]["coordinates"]
 
+    def receive_coord(self, data):
+        self.textBrowser.append(__file__ + '\t[INFO]:' + data)
+        point = data.split(",")
+        if point[0] == 'start':
+            self.sim2W.startPoint = shapely.geometry.Point(point[2], point[1])
+            self.textBrowser.append(__file__ + '\t[INFO]: Create the START point: ' + str(self.sim2W.startPoint.coords.xy))
+        else:
+            self.sim2W.endPoint = shapely.geometry.Point(point[2], point[1])
+            self.textBrowser.append(__file__ + '\t[INFO]: Create the END point: ' + str(self.sim2W.endPoint.coords.xy))
 
     # @pyqtSlot()
     def addCoordByBtn(self):
@@ -359,7 +377,7 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
                 content = file.read()  # 读取文件内容
                 self.textBrowser.append(__file__ + '\t[INFO]: Import the file : ' + fileName)
                 # self.textBrowser.append(content)
-                algo.loadGeoJsonFile(self.obstacles, fileName)
+                self.obstacles = algo.loadGeoJsonFile(self.obstacles, fileName)
                 print(self.obstacles)
                 self.interact_obj.sig_send_jsonfile_to_js.emit(content)
         else:
@@ -380,12 +398,11 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
 
     def loadFlightPlanToMap(self, fileName):
         self.textBrowser.append(__file__ + '\t[INFO]: Try to Import JSON File...')
-        self.textBrowser.append(ROOT_PATH)
         if fileName != "":
             with open(fileName, 'r') as file:
                 content = file.read()  # 读取文件内容
                 self.textBrowser.append(__file__ + '\t[INFO]: Import the file : ' + fileName)
-                self.interact_obj.sig_send_jsonfile_to_js.emit(content)
+                self.interact_obj.sig_send_auto_flight_plan_jsonfile_to_js.emit(content)
         else:
             self.textBrowser.append(__file__ + '\t[WARNING]: Cancel to Import JSON File')
 

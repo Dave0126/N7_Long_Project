@@ -45,7 +45,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QTextEdit" name="latTextEdit">
+        <widget class="QTextEdit" name="droneIdTextEdit">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
            <horstretch>0</horstretch>
@@ -81,7 +81,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QTextEdit" name="lngTextEdit">
+        <widget class="QTextEdit" name="flightDateTextEdit">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
            <horstretch>0</horstretch>
@@ -170,7 +170,7 @@
      <item>
       <widget class="QLabel" name="label_3">
        <property name="text">
-        <string>Auto Simple</string>
+        <string>Automatic sampling</string>
        </property>
       </widget>
      </item>

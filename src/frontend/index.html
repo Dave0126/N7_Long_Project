@@ -196,123 +196,53 @@
                 })
 
                 pyjs.sig_send_addStart_to_js.connect(function (str) {
-                    document.getElementById("output").innerHTML = 'start';
-                    currentControlToolbar.remove();
-
-                    // draw 添加绘制图层
-                    var startMarker = new L.FeatureGroup();
-                    map.addLayer(startMarker);
-
-                    //添加绘制控件
-                    var startMarkerControlAdd = new L.Control.Draw({
-                        draw: {
-                            polyline: false,
-                            polygon: false,
-                            rectangle: false,
-                            circle: false,
-                            marker: true,
-                            circlemarker: false
-                        },
-                        edit: {
-                            //绘制图层
-                            featureGroup: startMarker
+                    map.off('click');
+                    map.on('click', function(event) {
+                        // Remove the old marker
+                        if (startMarker != null) {
+                            startMarker.remove();
                         }
+
+                        // Add a new marker at the clicked location
+                        startMarker.setLatLng(event.latlng).addTo(map);
+
+                        // Send the new marker's coordinates to the Qt application
+                        pyjs.receive_coord_from_js("start," + event.latlng.lat.toString() + "," + event.latlng.lng.toString())
                     });
-                    var startMarkerControlEditDel = new L.Control.Draw({
-                        edit: {
-                            //绘制图层
-                            featureGroup: startMarker,
-                            edit: true,
-                            remove: true,
-                        },
-                        draw: false
-                    });
-                    
-                    //添加绘制控件
-                    map.addControl(startMarkerControlAdd);
-                    //绘制事件
-                    map.on(L.Draw.Event.CREATED, function (e) {
-                        var type = e.layerType,
-                            layer = e.layer;
-                        map.removeControl(startMarkerControlAdd);
-                        map.addControl(startMarkerControlEditDel);
-                        startMarker.addLayer(layer);
-                        curentLayer = startMarker;
-                    });
-                    // 修改事件
-                    map.on(L.Draw.Event.EDITED, function (e) {
-                        var layers = e.layers;
-                        var countOfEditedLayers = 0;
-                        layers.eachLayer(function (layer) {
-                            countOfEditedLayers++;
-                        });
-                        console.log("Edited " + countOfEditedLayers + " layers");
-                    });
-                    map.on('draw:deletestop', function (e) {
-                        map.removeControl(startMarkerControlEditDel);
-                        map.addControl(startMarkerControlAdd);
-                    });
-                    currentControlToolbar = startMarkerControlAdd;
                 })
 
                 pyjs.sig_send_addEnd_to_js.connect(function (str) {
-                    document.getElementById("output").innerHTML = 'end';
-                    currentControlToolbar.remove()
-
-                    // draw 添加绘制图层
-                    var endMarker = new L.FeatureGroup();
-                    map.addLayer(endMarker);
-
-
-                    //添加绘制控件
-                    var endMarkerControlAdd = new L.Control.Draw({
-                        draw: {
-                            polyline: false,
-                            polygon: false,
-                            rectangle: false,
-                            circle: false,
-                            marker: true,
-                            circlemarker: false
-                        },
-                        edit: {
-                            //绘制图层
-                            featureGroup: endMarker
+                    map.off('click');
+                    map.on('click', function(event) {
+                        // Remove the old marker
+                        if (endMarker != null) {
+                            endMarker.remove();
                         }
+
+                        // Add a new marker at the clicked location
+                        endMarker.setLatLng(event.latlng).addTo(map);
+
+                        // Send the new marker's coordinates to the Qt application
+                        pyjs.receive_coord_from_js("end," + event.latlng.lat.toString() + "," + event.latlng.lng.toString())
                     });
-                    var endMarkerControlEditDel = new L.Control.Draw({
-                        edit: {
-                            //绘制图层
-                            featureGroup: endMarker,
-                            edit: true,
-                            remove: true,
-                        },
-                        draw: false
-                    });
-                    //添加绘制控件
-                    map.addControl(endMarkerControlAdd);
-                    //绘制事件
-                    map.on(L.Draw.Event.CREATED, function (e) {
-                        var type = e.layerType,
-                            layer = e.layer;
-                        endMarker.addLayer(layer);
-                        curentLayer = endMarker;
-                        map.removeControl(endMarkerControlAdd);
-                        map.addControl(endMarkerControlEditDel);
-                    });
-                    // 修改事件
-                    map.on(L.Draw.Event.EDITED, function (e) {
-                        var layers = e.layers;
-                        var countOfEditedLayers = 0;
-                        layers.eachLayer(function (layer) {
-                            countOfEditedLayers++;
-                        });
-                        console.log("Edited " + countOfEditedLayers + " layers");
-                    });
-                    map.on(L.Draw.Event.DELETED, function (e) {
-                        map.removeControl(endMarkerControlEditDel);
-                        map.addControl(endMarkerControlAdd);
-                    });
-                    currentControlToolbar = endMarkerControlAdd;
+                })
+
+                pyjs.sig_send_click_off_to_js.connect(function (str){
+                    map.off('click');
+                })
+
+                pyjs.sig_send_auto_flight_plan_jsonfile_to_js.connect(function (str) {
+                    document.getElementById("output").innerHTML = str;
+                    if (str != null) {
+                        if (flightPlan != null) {
+                            flightPlan.remove()
+                        }
+                        flightPlan= L.geoJSON(JSON.parse(str)).addTo(map)
+                        flightPlan.setStyle({
+                            color: "green",
+                            weight: 4
+                        })
+                    }
                 })
 
                 // 按钮点击事件
@@ -384,6 +314,11 @@
     var overlay = {'Layer: real path of drone': coordSimLayerGroup};
     L.control.layers(null, overlay, {position:'bottomright'}).addTo(map);
 
+    var startMarker = new L.marker().bindPopup("<b>Start Point</b>").openPopup()
+    var endMarker = new L.marker().bindPopup("<b>End Point</b>").openPopup();
+
+    var flightPlan = new L.geoJSON()
+
     // 添加一个maker
     // var marker = L.marker([43.60427, 1.43691]).addTo(map);
     // marker.bindPopup("<b>Hello world!</b><br>I am a popup.")
@@ -402,21 +337,6 @@
     //         .openOn(map);
     // }
     // map.on('click', onMapClick);
-
-
-    // libs/liveupdate/leaflet-liveupdate.js
-    // lat = 43.60427
-    // lng = 1.43691
-    // L.control.liveupdate({
-    //     update_map: function () {
-    //         L.marker([lat, lng]).addTo(map);
-    //         lat += 0.002;
-    //         lng += 0.002;
-    //     },
-    //     position: 'topleft'
-    // })
-    //     .addTo(map)
-    //     .startUpdating();
 
     // Export Button
     var showExport = '<a href="#" onclick="geojsonExport()" title="Export to GeoJSON File" type="button" class="btn btn-danger btn-sm text-light"><i class="fa fa-file-code-o" aria-hidden="true"/> Export</a>';

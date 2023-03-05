@@ -109,7 +109,7 @@
      <item>
       <widget class="QLabel" name="label_3">
        <property name="text">
-        <string>Auto Simple</string>
+        <string>Automatic sampling</string>
        </property>
       </widget>
      </item>

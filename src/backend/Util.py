@@ -15,41 +15,42 @@ import os
 
 ROOT_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-def loadGeoJsonFile(obstacles, fileName):
-    with open(fileName) as f:
+def loadGeoJsonFile(_obstacles, _fileName):
+    with open(_fileName) as f:
         data = json.load(f)
 
     # Parse to shapely.Polygon
     for feature in data["features"]:
         geom = shape(feature["geometry"])
         if geom.type == "Polygon":
-            obstacles.append(geom)
+            _obstacles.append(geom)
         elif geom.type == "MultiPolygon":
             for sub_geom in geom:
-                obstacles.append(sub_geom)
+                _obstacles.append(sub_geom)
+    return _obstacles
 
 
-def jsonToGrid(map, resolution, startPoint, endPoint, obstacles):
-    bounds = map.bounds
+def jsonToGrid(_map, _resolution, _obstacles, _startPoint, _endPoint):
+    bounds = _map.bounds
     print(bounds)
-    rows = int(np.ceil((bounds[3] - bounds[1]) / resolution))
-    cols = int(np.ceil((bounds[2] - bounds[0]) / resolution))
+    rows = int(np.ceil((bounds[3] - bounds[1]) / _resolution))
+    cols = int(np.ceil((bounds[2] - bounds[0]) / _resolution))
     # 初始化网格 Initialize the grid
     grid = np.zeros((rows, cols))
     print(str(rows) + "\t" + str(cols))
     # 计算网格索引 Calculating the grid index
     for i in range(rows):
         for j in range(cols):
-            x = bounds[0] + j * resolution
-            y = bounds[1] + i * resolution
+            x = bounds[0] + j * _resolution
+            y = bounds[1] + i * _resolution
             point = shapely.geometry.Point(x, y)
-            if (startPoint.almost_equals(point, decimal=3)):
+            if (_startPoint.almost_equals(point, decimal=3)):
                 grid[rows - i - 1, j] = -1
                 start = (rows - i - 1, j)
-            if (endPoint.almost_equals(point, decimal=3)):
+            if (_endPoint.almost_equals(point, decimal=3)):
                 grid[rows - i - 1, j] = -2
                 end = (rows - i - 1, j)
-            for polygon in obstacles:
+            for polygon in _obstacles:
                 if polygon.contains(point):
                     grid[rows - i - 1, j] = 1
                     break
@@ -121,32 +122,32 @@ def astar(array, start, goal):
     return None
 
 
-def saveAsGridImage(gridMap, path):
+def saveAsGridImage(_gridMap, _path):
     # 创建一个新的图像，将所有像素设置为黑色 Create a new image with all pixels set to black
-    img = Image.new('RGB', (gridMap.shape[1], gridMap.shape[0]), (255, 255, 255))
+    img = Image.new('RGB', (_gridMap.shape[1], _gridMap.shape[0]), (255, 255, 255))
     # 将网格数据复制到像素值中 Copy grid data to pixel values
-    for i in range(gridMap.shape[0]):
-        for j in range(gridMap.shape[1]):
-            if gridMap[i, j] == 1:
+    for i in range(_gridMap.shape[0]):
+        for j in range(_gridMap.shape[1]):
+            if _gridMap[i, j] == 1:
                 # 如果网格中的值为 1，则将像素设置为白色 If the value in the grid is 1, then set the pixel to white
                 img.putpixel((j, i), (0, 0, 0))
-            if gridMap[i, j] == -1:
+            if _gridMap[i, j] == -1:
                 # 如果网格中的值为 -1，则将像素设置为红色（起点） If the value in the grid is -1, set the pixel to red (starting point)
                 img.putpixel((j, i), (255, 0, 0))
-            if gridMap[i, j] == -2:
+            if _gridMap[i, j] == -2:
                 # 如果网格中的值为 -1，则将像素设置为绿色（起点）If the value in the grid is -1, set the pixel to green (starting point)
                 img.putpixel((j, i), (0, 255, 0))
-    for p in path:
+    for p in _path:
         img.putpixel((p[1], p[0]), (0, 0, 255))
     # 保存图像 Save image
     img.save(ROOT_PATH + "/demos/grid.png")
 
-def findNonCollinearPoints(coords):
-    non_collinear_points = [coords[0]]
-    for i in range(1, len(coords)-1):
-        x1, y1 = coords[i-1]
-        x2, y2 = coords[i]
-        x3, y3 = coords[i+1]
+def findNonCollinearPoints(_coords):
+    non_collinear_points = [_coords[0]]
+    for i in range(1, len(_coords)-1):
+        x1, y1 = _coords[i-1]
+        x2, y2 = _coords[i]
+        x3, y3 = _coords[i+1]
 
         # 计算向量 Calculating vectors
         vec1 = (x1 - x2, y1 - y2)
@@ -160,23 +161,23 @@ def findNonCollinearPoints(coords):
         if abs(cos_theta) < 1:
             angle = math.acos(cos_theta) * 180 / math.pi
             if abs(angle - 180) > 1e-6:
-                non_collinear_points.append(coords[i])
-    non_collinear_points.append(coords[-1])
+                non_collinear_points.append(_coords[i])
+    non_collinear_points.append(_coords[-1])
 
     return non_collinear_points
 
 
-def gridToJsonAndSaveAsFile(point_list, non_collinear_points, saveJsonFileNAme, map, resolution, endPoint):
-    rows = int(np.ceil((map.bounds[3] - map.bounds[1]) / resolution))
-    cols = int(np.ceil((map.bounds[2] - map.bounds[0]) / resolution))
-    for node in non_collinear_points:
-        x = map.bounds[0] + node[1] * resolution
-        y = map.bounds[1] + (rows - node[0] - 0.5) * resolution
+def gridToJsonAndSaveAsFile(_map, _resolution, _point_list, _non_collinear_points, _endPoint, _saveJsonFileNAme):
+    rows = int(np.ceil((_map.bounds[3] - _map.bounds[1]) / _resolution))
+    cols = int(np.ceil((_map.bounds[2] - _map.bounds[0]) / _resolution))
+    for node in _non_collinear_points:
+        x = _map.bounds[0] + node[1] * _resolution
+        y = _map.bounds[1] + (rows - node[0] - 0.5) * _resolution
         point = shapely.geometry.Point(x, y)
-        point_list.append(point)
-    point_list.append(endPoint)
+        _point_list.append(point)
+    _point_list.append(_endPoint)
 
-    line = LineString([point.coords[0] for point in point_list])
+    line = LineString([point.coords[0] for point in _point_list])
 
     # 将LineString对象转换为GeoJSON格式 Converting LineString objects to GeoJSON format
     feature = geojson.Feature(geometry=line, properties={})
@@ -186,30 +187,33 @@ def gridToJsonAndSaveAsFile(point_list, non_collinear_points, saveJsonFileNAme, 
     }
 
     geojson_object = geojson.dumps(feature_collection, indent=4)
-    with open(saveJsonFileNAme, 'w') as f:
+    with open(_saveJsonFileNAme, 'w') as f:
         f.write(geojson_object)
 
 
-def createPath(startPoint  = shapely.geometry.Point(1.425299, 43.596458) , endPoint  = shapely.geometry.Point(1.453875, 43.608208)):
-    obstacles = []
-    loadGeoJsonFile(obstacles, ROOT_PATH + '/data/tests/backend/map.json')
-
-    # 网格分辨率 Grid resolution : 1/10000 * 111km
-    resolution = 1 / 10000
-    map = shapely.geometry.MultiPolygon(obstacles)
-    map = map.union(startPoint)
-    map = map.union(endPoint)
-    gridMap, start, goal = jsonToGrid(map, resolution, startPoint, endPoint, obstacles)
-
+def createFlightPlan(_obstacles, _startPoint, _endPoint, _resolution, _flightPlanFile):
+    map = shapely.geometry.MultiPolygon(_obstacles)
+    map = map.union(_startPoint)
+    map = map.union(_endPoint)
+    gridMap, start, goal = jsonToGrid(map, _resolution, _obstacles, _startPoint, _endPoint)
     # Run a_star
     path = astar(np.array(gridMap), start, goal)
     print(path)
-
     # Sets of coordinates that are not co-linear
     nonCollinearPoints = findNonCollinearPoints(path)
     print(nonCollinearPoints)
-
-    GeoJsonPointList = [startPoint]
-    gridToJsonAndSaveAsFile(GeoJsonPointList, nonCollinearPoints, ROOT_PATH+'/data/temp/customLines/FP_00000002_202302281115.json', map, resolution, endPoint)
-
+    geoJsonPointList = [_startPoint]
+    gridToJsonAndSaveAsFile(map, _resolution, geoJsonPointList, nonCollinearPoints, _endPoint , _flightPlanFile)
     saveAsGridImage(gridMap, path)
+
+
+if __name__ == '__main__':
+    obstacles = []
+    loadGeoJsonFile(obstacles, ROOT_PATH + '/data/tests/backend/map.json')
+
+    startPoint = shapely.geometry.Point(1.425299, 43.596458)
+    endPoint = shapely.geometry.Point(1.453875, 43.608208)
+
+    # 网格分辨率 Grid resolution : 1/10000 * 111km
+    resolution = 1 / 10000
+    createFlightPlan(obstacles, startPoint, endPoint, resolution, ROOT_PATH + '/data/temp/customLines/FP_00000002_202302281115.json')

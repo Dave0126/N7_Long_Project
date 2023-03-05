@@ -12,6 +12,7 @@ demo:
 clean:
 	rm -f data/temp/customAreas/*.json
 	rm -f data/temp/customLines/*.json
+	rm -f demos/grid.png
 
 ui:
 	$(PYUI) -o src/frontend/mainWidget.py src/frontend/UI/mainWidget.ui

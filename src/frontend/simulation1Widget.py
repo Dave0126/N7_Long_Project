@@ -122,7 +122,7 @@ class Ui_simulation1Widget(object):
         self.label.setText(_translate("simulation1Widget", "Enter a coordinate ( LAT & LNG ):"))
         self.lngTextEdit.setPlaceholderText(_translate("simulation1Widget", "LNG"))
         self.coordPushButton.setText(_translate("simulation1Widget", "OK"))
-        self.label_3.setText(_translate("simulation1Widget", "Auto Simple"))
+        self.label_3.setText(_translate("simulation1Widget", "Automatic sampling"))
         self.importDroneFlightPlanButton.setText(_translate("simulation1Widget", "Import a drone\'s flight plan"))
         self.label_2.setText(_translate("simulation1Widget", "millisecond"))
         self.autoSimStartButton.setText(_translate("simulation1Widget", "Start"))
