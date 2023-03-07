@@ -62,7 +62,57 @@
                             console.log("Found Zone in str: ", str);
                     }
                     else*/ console.log("STR : ", str); 
-                    if (str != 'STOP'){
+                    if (str == 'STOP'){
+                        coordSimLayerGroup.clearLayers()
+                    } else if (str == 'ManualPath'){
+                        var drawnLine = new L.FeatureGroup();
+                    map.addLayer(drawnLine);
+                    //添加绘制控件
+                    var drawLineControl = new L.Control.Draw({
+                        draw: {
+                            polyline: {
+                                shapeOptions: {
+                                    color: "#008001",
+                                    weight: 8,
+                                },
+                            },
+                            polygon: false,
+                            rectangle: false,
+                            circle: false,
+                            marker: false,
+                            circlemarker: false
+                        },
+                        edit: {
+                            //绘制图层
+                            featureGroup: drawnLine,
+                            edit: true,
+                            remove: true,
+                        }
+                    });
+                    //添加绘制控件
+                    map.addControl(drawLineControl);
+                    //绘制事件
+                    map.on(L.Draw.Event.CREATED, function (e) {
+                        var type = e.layerType,
+                            layer = e.layer;
+                        if (type === 'marker') {
+                            layer.bindPopup('A popup!');
+                        }
+                        drawnLine.addLayer(layer);
+                        curentLayer = drawnLine;
+                        geojsonExportAuto();
+                    });
+                    map.on(L.Draw.Event.EDITED, function (e) {
+                        var layers = e.layers;
+                        var countOfEditedLayers = 0;
+                        layers.eachLayer(function (layer) {
+                            countOfEditedLayers++;
+                        });
+                        console.log("Edited " + countOfEditedLayers + " layers");
+                        geojsonExportAuto();
+                    });
+                    currentControlToolbar = drawLineControl;
+                    } else {
                         print(str);
                         if (last_data != str) {
                             console.log("STRRR : ", str);
@@ -72,9 +122,8 @@
                             coordMarker.addTo(coordSimLayerGroup);
                         }
                         last_data = str
-                    } else {
-                        coordSimLayerGroup.clearLayers()
                     }
+                    
                 });
 
                 pyjs.sig_send_jsonfile_to_js.connect(function (str) {
@@ -363,6 +412,13 @@
         console.log("drawnLayer: \n" + jsonData)
         // 将json数据放入pyjs的channel中
         pyjs.receive_str_from_js(jsonData)
+    }
+    
+    function geojsonExportAuto() {
+        let nodata = '{"type":"FeatureCollection","features":[]}';
+        let jsonData = (JSON.stringify(curentLayer.toGeoJSON()));
+        console.log("drawnLayer: \n" + jsonData)
+        pyjs.receive_str_path_from_js_auto(jsonData)
     }
 
 </script>
