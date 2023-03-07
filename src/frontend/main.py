@@ -287,7 +287,31 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
 
         self.thread_pool = QThreadPool()
         self.thread_pool.setMaxThreadCount(2)  # 只允许一个线程
+    def automaticPath(self):
+            host = '127.0.0.1'
+            port = 8001
+            currentPosition = shapely.geometry.Point(self.realTimePosition[0], self.realTimePosition[1])
+            print(currentPosition)
+            with open(self.flightPlanFileName) as flightPlan:
+                parsed_json = json.load(flightPlan)
+            coordEndPoint = parsed_json['features'][0]['geometry']['coordinates'][-1]
+            endPoint = shapely.geometry.Point(coordEndPoint[0], coordEndPoint[1])
+            algo.createFlightPlan(self.obstacles, currentPosition, endPoint, self.sim2W.resolution, ROOT_PATH + '/data/temp/customLines/updated_FP.json' )
+            print("DONE")
+            self.socket.send("stop".encode())
+            self.socket.close()
 
+            task = SimulatorTask(Simulator( ROOT_PATH + '/data/temp/customLines/updated_FP.json', host, port))
+            statusTask = StatusReceiverTask(RcvCmdThread( ROOT_PATH + '/data/temp/customLines/updated_FP.json', host, port+1))
+            self.thread_pool.start(statusTask)
+            self.thread_pool.start(task)
+            self.flightPlanFileName = ROOT_PATH + '/data/temp/customLines/updated_FP.json'
+            try:
+                self.socket = socket.socket()
+                self.socket.connect((host, port+1))
+            except Exception as e:
+                print(f"Exception while trying to connect to ReceiverTask: {e}")
+                return
     def receive_data(self, data):
         self.textBrowser.append(__file__ + '\t[INFO]: Receive data from Map (QWebEngineView)...')
         context = json.loads(data)
