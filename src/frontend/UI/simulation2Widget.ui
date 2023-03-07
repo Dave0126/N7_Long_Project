@@ -166,6 +166,20 @@
     </layout>
    </item>
    <item>
+    <widget class="QPushButton" name="automatic">
+     <property name="text">
+      <string>Automatic Path</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="manualPath">
+     <property name="text">
+      <string>Manual Path</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
       <widget class="QLabel" name="label_3">
