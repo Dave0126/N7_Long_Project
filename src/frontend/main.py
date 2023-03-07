@@ -247,7 +247,7 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         self.sim2W.autoSimStartButton.clicked.connect(lambda: self.updateCoordDataByTimer(self.sim2W.setTimerSpinBox.value()))
         self.sim2W.autoSimStopButton.clicked.connect(self.stopUpdateCoordData)
         self.sim2W.autoSimPulseOrContinueButton.clicked.connect(self.pulseOrContinueUpdateCoordData)
-        
+        self.sim2W.automatic.clicked.connect(self.automaticPath)
         # Select a file
         self.actionImport_GeoJSON_File.triggered.connect(self.openFile)
 
