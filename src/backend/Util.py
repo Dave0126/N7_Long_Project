@@ -38,6 +38,8 @@ def jsonToGrid(_map, _resolution, _obstacles, _startPoint, _endPoint):
     # 初始化网格 Initialize the grid
     grid = np.zeros((rows, cols))
     print(str(rows) + "\t" + str(cols))
+    start = (0,0)
+    end = (0,0)
     # 计算网格索引 Calculating the grid index
     for i in range(rows):
         for j in range(cols):
