@@ -220,6 +220,7 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         self.webEngineView.load(QUrl.fromLocalFile(self.index))
         self.textBrowser.append(__file__ + '\t[INFO]: Initializing the interact object ...')
         self.init_channel()
+        self.timer = None
 
         # Load and config different widgets pages
         self.qls = QStackedLayout(self.frame_main)
@@ -344,6 +345,9 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         self.flightPlanFileName = ROOT_PATH + '/data/temp/customLines/'+"FP_ManualPath_100000.json"
 
     def manual_path(self):
+        if not(self.timer):
+            self.textBrowser.append(__file__ + '\t[INFO]: No flight plan imported...')
+            return
         self.timer.stop()
         self.timer.deleteLater()
         #envoyer socket avec text = "pulse" à backend
@@ -352,6 +356,9 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         self.interact_obj.sig_send_to_js.emit("ManualPath")  
 
     def automaticPath(self):
+        if not(self.timer):
+            self.textBrowser.append(__file__ + '\t[INFO]: No flight plan imported...')
+            return
         self.timer.stop()
         self.timer.deleteLater()
         self.socket.send("ManualPath".encode())
@@ -364,8 +371,6 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         coordEndPoint = parsed_json['features'][0]['geometry']['coordinates'][-1]
         endPoint = shapely.geometry.Point(coordEndPoint[0], coordEndPoint[1])
         algo.createFlightPlan(self.obstacles, currentPosition, endPoint, self.sim2W.resolution, ROOT_PATH + '/data/temp/customLines/FP_updated_10000.json' )
-
-        
 
         self.flightPlanFileName = ROOT_PATH + '/data/temp/customLines/FP_updated_10000.json'
 
@@ -390,9 +395,16 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
     def updateCoordDataByTimer(self, milliSecond):
         host = '127.0.0.1'
         port = 12349
+        if (self.flightPlanFileName == ""):
+            self.textBrowser.append(__file__ + '\t[INFO]: No flight plan imported...')
+            return
         self.timer = QTimer(self)
         # self.recv_thread = RcvDataThread(self, '127.0.0.1', 12349)
-        self.recvThreadPool.submit(RcvDataThread(self, host, port).run)
+        try:
+            self.recvThreadPool.submit(RcvDataThread(self, host, port).run)
+        except OSError:
+            self.textBrowser.append(__file__ + '\t[INFO]: Another simulation is already running...')
+            return
         self.timer.timeout.connect(self.updateCoordData)
         self.timer.start(milliSecond)
         self.textBrowser.append(__file__ + '\t[INFO]: Start automatic sampling...')
@@ -409,6 +421,9 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
             return
 
     def stopUpdateCoordData(self):
+        if not(self.timer):
+            self.textBrowser.append(__file__ + '\t[INFO]: No flight plan imported...')
+            return
         self.textBrowser.append(__file__ + '\t[INFO]: Stop automatic sampling...')
         self.timer.stop()
         self.timer.deleteLater()
@@ -422,6 +437,9 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         self.interact_obj.sig_send_to_js.emit('STOP')
 
     def pulseOrContinueUpdateCoordData(self):
+        if not(self.timer):
+            self.textBrowser.append(__file__ + '\t[INFO]: No flight plan imported...')
+            return
         if self.timer.isActive():
             self.timer.stop()
             self.textBrowser.append(__file__ + '\t[INFO]: Pulse automatic sampling...')
