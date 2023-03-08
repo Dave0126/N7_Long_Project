@@ -93,10 +93,25 @@ def distance(x1, y1, x2, y2):
     return dist
 
 def min_dist_ext(p, zone_coords):
-
-
-    return p
-
+    zone = Zone("param_zone", coordinates=zone_coords)
+    if not(zone.checkInside(Point(p[0], p[1]))):
+        return
+    min_dist = math.inf
+    best_point = None
+    for i in range(len(zone_coords)):
+        for j in range(1, len(zone_coords) + 1):
+            p1 = zone_coords[i]
+            p2 = zone_coords[j]
+            p21Dir = [p2[0] - p1[0], p2[1] - p1[1]]
+            perpDir = [-p21Dir[1], p21Dir[0]]
+            p31Dir = [p[0] - p1[0], p[1] - p1[1]]
+            s = (perpDir[1] * p31Dir[0] - perpDir[0] * p31Dir[1]) / (p21Dir[0] * perpDir[1] - p21Dir[1] * perpDir[0])
+            Intersect = [p1[0] + s* p21Dir[0], p1[1] + s* p21Dir[1]]
+            dist = distance(p[0], p[1], Intersect[0], Intersect[1])
+            if (dist < min_dist):
+                min_dist = dist
+                best_point = Intersect
+    return Intersect
 
 class Zone:
     def __init__(self, zoneLabel, zone_shape = "Polygon", coordinates = [], description = "", area_type = Area()):
@@ -143,7 +158,7 @@ class Zone:
                 
             # Forming a line from two consecutive points of
             # poly
-            side = Line(Point(self.coordinates[i]), Point(self.coordinates[(i + 1) % self.n_vertices]))
+            side = Line(Point(self.coordinates[i][0], self.coordinates[i][1]), Point(self.coordinates[(i + 1) % self.n_vertices][0], self.coordinates[(i + 1) % self.n_vertices][1] ))
             if (side.isIntersect(exline)):
     
                 # If side is intersects exline
