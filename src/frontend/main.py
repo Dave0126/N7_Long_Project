@@ -97,7 +97,7 @@ class editArea_Widget(QWidget, editAreaWidget.Ui_editArea_Widget):
             with open(fileName, 'w') as f:
                 context = self.editJsonTextBrowser.toPlainText()
                 f.write(context)
-            mainWindow.obstacles = algo.loadGeoJsonFile(mainWindow.obstacles, fileName)
+            mainWindow.obstacles = (algo.loadGeoJsonFile(mainWindow.obstacles, fileName))
             print(mainWindow.obstacles)
         else:
             mainWindow.textBrowser.append(__file__ + '\t[WARNING]: Cancel to saveEditInfoAsFile')
@@ -254,6 +254,7 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         self.sim2W.autoSimStopButton.clicked.connect(self.stopUpdateCoordData)
         self.sim2W.autoSimPulseOrContinueButton.clicked.connect(self.pulseOrContinueUpdateCoordData)
         self.sim2W.manualPath.clicked.connect(self.manual_path)
+        self.sim2W.automatic.clicked.connect(self.automaticPath)
         
         # Select a file
         self.actionImport_GeoJSON_File.triggered.connect(self.openFile)
@@ -349,7 +350,7 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         self.socket.send("ManualPath".encode())
         self.socket.close()
         self.interact_obj.sig_send_to_js.emit("ManualPath")  
-        
+
     def automaticPath(self):
         self.timer.stop()
         self.timer.deleteLater()
@@ -363,7 +364,11 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         coordEndPoint = parsed_json['features'][0]['geometry']['coordinates'][-1]
         endPoint = shapely.geometry.Point(coordEndPoint[0], coordEndPoint[1])
         algo.createFlightPlan(self.obstacles, currentPosition, endPoint, self.sim2W.resolution, ROOT_PATH + '/data/temp/customLines/FP_updated_10000.json' )
+
+        
+
         self.flightPlanFileName = ROOT_PATH + '/data/temp/customLines/FP_updated_10000.json'
+
         
     # @pyqtSlot()
     def addCoordByBtn(self):
@@ -451,7 +456,7 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
                 content = file.read()  # 读取文件内容
                 self.textBrowser.append(__file__ + '\t[INFO]: Import the file : ' + fileName)
                 # self.textBrowser.append(content)
-                self.obstacles = algo.loadGeoJsonFile(self.obstacles, fileName)
+                self.obstacles = (algo.loadGeoJsonFile(self.obstacles, fileName))
                 print(self.obstacles)
                 self.interact_obj.sig_send_jsonfile_to_js.emit(content)
         else:
