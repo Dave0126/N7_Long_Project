@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'src/frontend/UI/simulation2Widget.ui'
+# Form implementation generated from reading ui file 'simulation2Widget.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.7
 #
@@ -88,6 +88,9 @@ class Ui_simulation2Widget(object):
         self.line.setObjectName("line")
         self.verticalLayout.addWidget(self.line)
         self.verticalLayout_4.addLayout(self.verticalLayout)
+        self.manualPath = QtWidgets.QPushButton(simulation2Widget)
+        self.manualPath.setObjectName("manualPath")
+        self.verticalLayout_4.addWidget(self.manualPath)
         self.verticalLayout_2 = QtWidgets.QVBoxLayout()
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.label_3 = QtWidgets.QLabel(simulation2Widget)
@@ -154,6 +157,7 @@ class Ui_simulation2Widget(object):
         self.addStartPointPushButton.setText(_translate("simulation2Widget", "Add Start Point"))
         self.addEndPointPushButton.setText(_translate("simulation2Widget", "Add End Point"))
         self.createPlanPushButton.setText(_translate("simulation2Widget", "Create a FlightPlan"))
+        self.manualPath.setText(_translate("simulation2Widget", "Manual Path"))
         self.label_3.setText(_translate("simulation2Widget", "Automatic sampling"))
         self.importDroneFlightPlanButton.setText(_translate("simulation2Widget", "Import a drone\'s flight plan"))
         self.label_2.setText(_translate("simulation2Widget", "millisecond"))
@@ -162,3 +166,4 @@ class Ui_simulation2Widget(object):
         self.autoSimStopButton.setText(_translate("simulation2Widget", "Stop"))
         self.label_4.setText(_translate("simulation2Widget", "Record"))
         self.simExportButton.setText(_translate("simulation2Widget", "Export simulation"))
+

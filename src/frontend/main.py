@@ -177,17 +177,23 @@ class TInteractObj(QObject):
     sig_send_addEnd_to_js = pyqtSignal(str)
     sig_send_click_off_to_js = pyqtSignal(str)
     sig_send_auto_flight_plan_jsonfile_to_js = pyqtSignal(str)
+    sig_send_manual_path_to_js = pyqtSignal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         # 交互对象接收到js调用后执行的回调函数.
         self.receive_str_from_js_callback = None
+        self.receive_str_path_from_js_callback_auto = None
         self.receive_coord_from_js_callback = None
 
     # str表示接收str类型的信号,信号是从js发出的.
     @pyqtSlot(str)
     def receive_str_from_js(self, str):
         self.receive_str_from_js_callback(str)
+        
+    @pyqtSlot(str)
+    def receive_str_path_from_js_auto(self, str):
+        self.receive_str_path_from_js_callback_auto(str)
 
     @pyqtSlot(str)
     def receive_coord_from_js(self, str):
@@ -247,6 +253,7 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         self.sim2W.autoSimStartButton.clicked.connect(lambda: self.updateCoordDataByTimer(self.sim2W.setTimerSpinBox.value()))
         self.sim2W.autoSimStopButton.clicked.connect(self.stopUpdateCoordData)
         self.sim2W.autoSimPulseOrContinueButton.clicked.connect(self.pulseOrContinueUpdateCoordData)
+        self.sim2W.manualPath.clicked.connect(self.manual_path)
         
         # Select a file
         self.actionImport_GeoJSON_File.triggered.connect(self.openFile)
@@ -277,6 +284,7 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         """
         self.interact_obj = TInteractObj(self)
         self.interact_obj.receive_str_from_js_callback = self.receive_data
+        self.interact_obj.receive_str_path_from_js_callback_auto = self.receive_data_auto
         self.interact_obj.receive_coord_from_js_callback = self.receive_coord
 
         channel = QWebChannel(self.webEngineView.page())
@@ -311,7 +319,37 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         else:
             self.sim2W.endPoint = shapely.geometry.Point(point[2], point[1])
             self.textBrowser.append(__file__ + '\t[INFO]: Create the END point: ' + str(self.sim2W.endPoint.coords.xy))
+            
+    def receive_data_auto(self, data):
+        #receive data from EXPORT in index.html
+        self.textBrowser.append(__file__ + '\t[INFO]: Receive data from Map (QWebEngineView)...')
+        context = json.loads(data)
+        JsonFormat = json.dumps(context, indent=4)
+        self.editW.editJsonTextBrowser.setText(JsonFormat)
+        #Export to JSON file
+        mainWindow.textBrowser.append(__file__ + '\t[INFO]: Try to saveEditInfoAsFile...')
+        droneId = "ManualPath"
+        flightTime = "100000"
+        fileName, fileType = QFileDialog.getSaveFileName(self,
+                                                         "Save as",
+                                                         ROOT_PATH + '/data/temp/customLines/'+'FP_'+droneId+'_'+flightTime,
+                                                         "JSON Files (*.json)")
+        if fileName != "":
+            with open(fileName, 'w') as f:
+                context = self.editW.editJsonTextBrowser.toPlainText()
+                f.write(context)
+        else:
+            mainWindow.textBrowser.append(__file__ + '\t[WARNING]: Cancel to saveEditInfoAsFile')
+        self.flightPlanFileName = ROOT_PATH + '/data/temp/customLines/'+"FP_ManualPath_100000.json"
 
+    def manual_path(self):
+        self.timer.stop()
+        self.timer.deleteLater()
+        #envoyer socket avec text = "pulse" à backend
+        self.socket.send("ManualPath".encode())
+        self.socket.close()
+        self.interact_obj.sig_send_to_js.emit("ManualPath")  
+        
     # @pyqtSlot()
     def addCoordByBtn(self):
         coord = self.sim1W.latTextEdit.toPlainText() + "," + self.sim1W.lngTextEdit.toPlainText()
