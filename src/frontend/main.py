@@ -350,6 +350,21 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
         self.socket.close()
         self.interact_obj.sig_send_to_js.emit("ManualPath")  
         
+    def automaticPath(self):
+        self.timer.stop()
+        self.timer.deleteLater()
+        self.socket.send("ManualPath".encode())
+        self.socket.close()
+        coordStartPoint = mainWindow.realTimePosition.split(",")
+        currentPosition= shapely.geometry.Point(coordStartPoint[1], coordStartPoint[0])
+        print(currentPosition)
+        with open(self.flightPlanFileName) as flightPlan:
+            parsed_json = json.load(flightPlan)
+        coordEndPoint = parsed_json['features'][0]['geometry']['coordinates'][-1]
+        endPoint = shapely.geometry.Point(coordEndPoint[0], coordEndPoint[1])
+        algo.createFlightPlan(self.obstacles, currentPosition, endPoint, self.sim2W.resolution, ROOT_PATH + '/data/temp/customLines/FP_updated_10000.json' )
+        self.flightPlanFileName = ROOT_PATH + '/data/temp/customLines/FP_updated_10000.json'
+        
     # @pyqtSlot()
     def addCoordByBtn(self):
         coord = self.sim1W.latTextEdit.toPlainText() + "," + self.sim1W.lngTextEdit.toPlainText()
