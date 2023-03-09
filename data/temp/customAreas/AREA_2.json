@@ -1,0 +1,39 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            1.445907,
+                            43.600659
+                        ],
+                        [
+                            1.445907,
+                            43.604914
+                        ],
+                        [
+                            1.451487,
+                            43.604914
+                        ],
+                        [
+                            1.451487,
+                            43.600659
+                        ],
+                        [
+                            1.445907,
+                            43.600659
+                        ]
+                    ]
+                ]
+            }
+        }
+    ],
+    "name": "2",
+    "description": "2",
+    "level": 1
+}

@@ -1,5 +1,9 @@
 # N7_Long_Project
 
+## Introduction
+
+This project that involves the design of a drone path configuration system that is intended to operate within the U-space framework. The technology tries to address some of the issues with safety that come with integrating drones into airspace,especially the modification of the trajectory of a drone following a reconfiguration of the airspace when imposing constraints on the trajectory initially planned.
+
 ## Development environment 
 
 - `Python Ver. 3.10.10`
@@ -9,22 +13,15 @@
 - `PyQt5 Ver. 5.15.7`
 
   ```shell
-  pip install pyqt5==5.15.7
+  pip3 install pyqt5==5.15.7
   ```
 
 - `PyQtWebEngine Ver. 5.15.6`
 
   ```shell
-  pip install pyqtwebengine==5.15.6
+  pip3 install pyqtwebengine==5.15.6
   ```
 
-- `folium Ver. 0.14.0`
-
-  ```shell
-  pip install folium==0.14.0
-  ```
-
-- ...
 
 
 
