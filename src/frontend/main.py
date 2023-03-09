@@ -374,6 +374,11 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
 
         self.flightPlanFileName = ROOT_PATH + '/data/temp/customLines/FP_updated_10000.json'
 
+        with open(self.flightPlanFileName, 'r') as file:
+            content = file.read()  # 读取文件内容
+            self.interact_obj.sig_send_auto_flight_plan_jsonfile_to_js.emit(content)
+
+
         
     # @pyqtSlot()
     def addCoordByBtn(self):
@@ -466,8 +471,7 @@ class Window(QMainWindow, mainWindow.Ui_MainWindow):
 
     def openFile(self):
         self.textBrowser.append(__file__ + '\t[INFO]: Try to Import JSON File...')
-        self.textBrowser.append(ROOT_PATH)
-        fileName, filetype = QFileDialog.getOpenFileName(self, "Select a JSON file", ROOT_PATH,
+        fileName, filetype = QFileDialog.getOpenFileName(self, "Select a JSON file", ROOT_PATH+"/data/tests/frontend",
                                                          "JSON File (*.json)")
         if fileName != "":
             with open(fileName, 'r') as file:
